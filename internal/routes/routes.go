@@ -1,0 +1,46 @@
+package routes
+
+import (
+	"github.com/go-chi/chi/v5"
+	"github.com/zuudevs/saq-inventory-system-backend/internal/handlers"
+)
+
+func BrandRoutes(r chi.Router, h *handlers.BrandHandler) {
+	r.Route("/brands", func(r chi.Router) {
+		r.Get("/", h.FindAll)
+		r.Get("/{id}", h.FindByID)
+		r.Post("/", h.Create)
+		r.Put("/{id}", h.Update)
+		r.Delete("/{id}", h.Delete)
+	})
+}
+
+func CategoryRoutes(r chi.Router, h *handlers.CategoryHandler) {
+	r.Route("/categories", func(r chi.Router) {
+		r.Get("/", h.FindAll)
+		r.Get("/{id}", h.FindByID)
+		r.Post("/", h.Create)
+		r.Put("/{id}", h.Update)
+		r.Delete("/{id}", h.Delete)
+	})
+}
+
+func LocationRoutes(r chi.Router, h *handlers.LocationHandler) {
+	r.Route("/locations", func(r chi.Router) {
+		r.Get("/", h.FindAll)
+		r.Get("/{id}", h.FindByID)
+		r.Post("/", h.Create)
+		r.Put("/{id}", h.Update)
+		r.Delete("/{id}", h.Delete)
+	})
+}
+
+func ItemRoutes(r chi.Router, h *handlers.ItemHandler) {
+	r.Route("/items", func(r chi.Router) {
+		r.Get("/", h.FindAll)
+		r.Get("/{id}", h.FindByID)
+		r.Post("/", h.Create)
+		r.Put("/{id}", h.Update)
+		r.Delete("/{id}", h.Delete)
+	})
+}
