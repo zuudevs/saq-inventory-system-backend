@@ -98,7 +98,15 @@ func (r *BrandRepository) Create(brand *models.Brand) error {
 
 	brand.ID = uint64(id)
 
-	return nil
+	return r.db.Get(
+		brand,
+		`
+		SELECT ` + BRAND_FIND_FIELDS + `
+		FROM ` + BRAND_TABLE_NAME + `
+		WHERE id = ?
+		`,
+		brand.ID,
+	)
 }
 
 func (r *BrandRepository) Update(brand *models.Brand) error {
@@ -115,7 +123,19 @@ func (r *BrandRepository) Update(brand *models.Brand) error {
 		brand.ID,
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return r.db.Get(
+		brand,
+		`
+		SELECT ` + BRAND_FIND_FIELDS + `
+		FROM ` + BRAND_TABLE_NAME + `
+		WHERE id = ?
+		`,
+		brand.ID,
+	)
 }
 
 func (r *BrandRepository) Delete(id uint64) error {

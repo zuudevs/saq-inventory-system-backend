@@ -126,7 +126,15 @@ func (r *ItemRepository) Create(item *models.Item) error {
 
 	item.ID = uint64(id)
 
-	return nil
+	return r.db.Get(
+		item,
+		`
+		SELECT ` + ITEM_FIND_FIELDS + `
+		FROM ` + ITEM_TABLE_NAME + `
+		WHERE id = ?
+		`,
+		item.ID,
+	)
 }
 
 func (r *ItemRepository) Update(item *models.Item) error {
@@ -150,7 +158,19 @@ func (r *ItemRepository) Update(item *models.Item) error {
 		item.ID,
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return r.db.Get(
+		item,
+		`
+		SELECT ` + ITEM_FIND_FIELDS + `
+		FROM ` + ITEM_TABLE_NAME + `
+		WHERE id = ?
+		`,
+		item.ID,
+	)
 }
 
 func (r *ItemRepository) Delete(id uint64) error {

@@ -106,7 +106,19 @@ func (r *LocationRepository) Create(location *models.Location) error {
 
 	location.ID = uint64(id)
 
-	return nil
+	if err != nil {
+		return err
+	}
+
+	return r.db.Get(
+		location,
+		`
+		SELECT ` + LOCATION_FIND_FIELDS + `
+		FROM ` + LOCATION_TABLE_NAME + `
+		WHERE id = ?
+		`,
+		location.ID,
+	)
 }
 
 func (r *LocationRepository) Update(location *models.Location) error {
@@ -125,7 +137,19 @@ func (r *LocationRepository) Update(location *models.Location) error {
 		location.ID,
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return r.db.Get(
+		location,
+		`
+		SELECT ` + LOCATION_FIND_FIELDS + `
+		FROM ` + LOCATION_TABLE_NAME + `
+		WHERE id = ?
+		`,
+		location.ID,
+	)
 }
 
 func (r *LocationRepository) Delete(id uint64) error {

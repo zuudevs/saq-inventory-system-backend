@@ -102,7 +102,15 @@ func (r *CategoryRepository) Create(category *models.Category) error {
 
 	category.ID = uint64(id)
 
-	return nil
+	return r.db.Get(
+		category,
+		`
+		SELECT ` + CATEGORY_FIND_FIELDS + `
+		FROM ` + CATEGORY_TABLE_NAME + `
+		WHERE id = ?
+		`,
+		category.ID,
+	)
 }
 
 func (r *CategoryRepository) Update(category *models.Category) error {
@@ -120,7 +128,19 @@ func (r *CategoryRepository) Update(category *models.Category) error {
 		category.ID,
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return r.db.Get(
+		category,
+		`
+		SELECT ` + CATEGORY_FIND_FIELDS + `
+		FROM ` + CATEGORY_TABLE_NAME + `
+		WHERE id = ?
+		`,
+		category.ID,
+	)
 }
 
 func (r *CategoryRepository) Delete(id uint64) error {
