@@ -1,0 +1,3 @@
+[submodule "tools/zuu-powershell-dotenv"]
+	path = tools/zuu-powershell-dotenv
+	url = https://github.com/zuudevs/zuu-powershell-dotenv.git
