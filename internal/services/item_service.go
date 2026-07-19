@@ -119,7 +119,15 @@ func (s *ItemService) FindByID(id uint64) (*dto.ItemResponse, error) {
 		return nil, nil
 	}
 
-	return dto.ToItemResponse(item), nil
+	response := dto.ToItemResponse(item)
+
+	metadata, err := s.loadMetadata(item)
+	if err != nil {
+		return nil, err
+	}
+	response.Metadata = metadata
+
+	return response, nil
 }
 
 func (s *ItemService) Update(id uint64, req dto.UpdateItemRequest) (*dto.ItemResponse, error) {
@@ -142,11 +150,67 @@ func (s *ItemService) Update(id uint64, req dto.UpdateItemRequest) (*dto.ItemRes
 		return nil, err
 	}
 
-	return dto.ToItemResponse(item), nil
+	response := dto.ToItemResponse(item)
+
+	metadata, err := s.loadMetadata(item)
+	if err != nil {
+		return nil, err
+	}
+	response.Metadata = metadata
+
+	return response, nil
 }
 
 func (s *ItemService) Delete(id uint64) error {
 	return s.ItemRepository.Delete(id)
+}
+
+// loadMetadata mengambil baris metadata milik sebuah item dari
+// table_<slug>_metadata, kalau kategori item tersebut memang punya metadata
+// structure terdaftar. Dipanggil dari FindByID dan Update supaya kedua
+// endpoint itu ikut mengembalikan metadata dari DB, bukan cuma dari payload
+// request seperti yang sebelumnya terjadi di Create.
+//
+// Mengembalikan (nil, nil) bila kategori tidak punya metadata structure,
+// atau belum ada baris metadata untuk item ini (mis. race antara create item
+// dan create structure, atau data lama sebelum structure ditambahkan).
+func (s *ItemService) loadMetadata(item *models.Item) (map[string]any, error) {
+	category, err := s.CategoryRepository.FindByID(item.CategoryID)
+	if err != nil {
+		return nil, err
+	}
+	if category == nil {
+		return nil, nil
+	}
+
+	structure, err := s.MetadataStructureRepository.FindByCategoryID(item.CategoryID)
+	if err != nil {
+		return nil, err
+	}
+	if structure == nil {
+		return nil, nil
+	}
+
+	tableName := schema.MetadataTableName(category.Slug)
+
+	row, err := s.MetadataRepository.FindByItemID(tableName, item.ID)
+	if err != nil {
+		return nil, err
+	}
+	if row == nil {
+		return nil, nil
+	}
+
+	// `id`, `item_id`, `created_at`, `updated_at` adalah kolom housekeeping
+	// tabel metadata, bukan bagian dari payload field yang didefinisikan
+	// user di metadata structure — dibuang supaya bentuk response konsisten
+	// dengan yang dikirim balik oleh Create (field structure saja).
+	delete(row, "id")
+	delete(row, "item_id")
+	delete(row, "created_at")
+	delete(row, "updated_at")
+
+	return row, nil
 }
 
 func validateItem(item *models.Item) error {
