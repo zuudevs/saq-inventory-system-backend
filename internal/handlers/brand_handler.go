@@ -80,7 +80,7 @@ func (h *BrandHandler) FindByID(w http.ResponseWriter, r *http.Request) {
 		10,
 		64,
 	)
-	
+
 	if err != nil {
 		utils.JSON(
 			w,

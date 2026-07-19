@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	LOCATION_TABLE_NAME = `table_location`
+	LOCATION_TABLE_NAME  = `table_location`
 	LOCATION_FIND_FIELDS = `
 		id,
 		name,
@@ -113,8 +113,8 @@ func (r *LocationRepository) Create(location *models.Location) error {
 	return r.db.Get(
 		location,
 		`
-		SELECT ` + LOCATION_FIND_FIELDS + `
-		FROM ` + LOCATION_TABLE_NAME + `
+		SELECT `+LOCATION_FIND_FIELDS+`
+		FROM `+LOCATION_TABLE_NAME+`
 		WHERE id = ?
 		`,
 		location.ID,
@@ -144,8 +144,8 @@ func (r *LocationRepository) Update(location *models.Location) error {
 	return r.db.Get(
 		location,
 		`
-		SELECT ` + LOCATION_FIND_FIELDS + `
-		FROM ` + LOCATION_TABLE_NAME + `
+		SELECT `+LOCATION_FIND_FIELDS+`
+		FROM `+LOCATION_TABLE_NAME+`
 		WHERE id = ?
 		`,
 		location.ID,

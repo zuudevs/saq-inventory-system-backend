@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	BRAND_TABLE_NAME = `table_brand`
+	BRAND_TABLE_NAME  = `table_brand`
 	BRAND_FIND_FIELDS = `
 		id,
 		name,
@@ -101,8 +101,8 @@ func (r *BrandRepository) Create(brand *models.Brand) error {
 	return r.db.Get(
 		brand,
 		`
-		SELECT ` + BRAND_FIND_FIELDS + `
-		FROM ` + BRAND_TABLE_NAME + `
+		SELECT `+BRAND_FIND_FIELDS+`
+		FROM `+BRAND_TABLE_NAME+`
 		WHERE id = ?
 		`,
 		brand.ID,
@@ -130,8 +130,8 @@ func (r *BrandRepository) Update(brand *models.Brand) error {
 	return r.db.Get(
 		brand,
 		`
-		SELECT ` + BRAND_FIND_FIELDS + `
-		FROM ` + BRAND_TABLE_NAME + `
+		SELECT `+BRAND_FIND_FIELDS+`
+		FROM `+BRAND_TABLE_NAME+`
 		WHERE id = ?
 		`,
 		brand.ID,

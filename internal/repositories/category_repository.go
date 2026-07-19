@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	CATEGORY_TABLE_NAME = `table_category`
+	CATEGORY_TABLE_NAME  = `table_category`
 	CATEGORY_FIND_FIELDS = `
 		id,
 		name,
@@ -105,8 +105,8 @@ func (r *CategoryRepository) Create(category *models.Category) error {
 	return r.db.Get(
 		category,
 		`
-		SELECT ` + CATEGORY_FIND_FIELDS + `
-		FROM ` + CATEGORY_TABLE_NAME + `
+		SELECT `+CATEGORY_FIND_FIELDS+`
+		FROM `+CATEGORY_TABLE_NAME+`
 		WHERE id = ?
 		`,
 		category.ID,
@@ -135,8 +135,8 @@ func (r *CategoryRepository) Update(category *models.Category) error {
 	return r.db.Get(
 		category,
 		`
-		SELECT ` + CATEGORY_FIND_FIELDS + `
-		FROM ` + CATEGORY_TABLE_NAME + `
+		SELECT `+CATEGORY_FIND_FIELDS+`
+		FROM `+CATEGORY_TABLE_NAME+`
 		WHERE id = ?
 		`,
 		category.ID,
