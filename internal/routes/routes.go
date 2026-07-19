@@ -44,3 +44,10 @@ func ItemRoutes(r chi.Router, h *handlers.ItemHandler) {
 		r.Delete("/{id}", h.Delete)
 	})
 }
+
+func MetadataStructureRoutes(r chi.Router, h *handlers.MetadataStructureHandler) {
+	r.Route("/categories/{categoryId}/metadata-structure", func(r chi.Router) {
+		r.Get("/", h.FindByCategoryID)
+		r.Post("/", h.Create)
+	})
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/zuudevs/saq-inventory-system-backend/internal/handlers"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/repositories"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/routes"
+	"github.com/zuudevs/saq-inventory-system-backend/internal/schema"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/services"
 )
 
@@ -34,12 +35,16 @@ func main() {
 
 	log.Println("Connected to MySQL")
 
-
 	// Repository
 	brandRepository := repositories.NewBrandRepository(db)
 	categoryRepository := repositories.NewCategoryRepository(db)
 	locationRepository := repositories.NewLocationRepository(db)
 	itemRepository := repositories.NewItemRepository(db)
+	metadataStructureRepository := repositories.NewMetadataStructureRepository(db)
+	metadataRepository := repositories.NewMetadataRepository(db)
+
+	// Schema
+	schemaService := schema.NewService(db)
 
 	// Service
 	brandService := &services.BrandService{
@@ -55,16 +60,25 @@ func main() {
 	}
 
 	itemService := &services.ItemService{
-		ItemRepository: itemRepository,
+		DB:                          db,
+		ItemRepository:              itemRepository,
+		CategoryRepository:          categoryRepository,
+		MetadataStructureRepository: metadataStructureRepository,
+		MetadataRepository:          metadataRepository,
 	}
 
+	metadataStructureService := &services.MetadataStructureService{
+		MetadataStructureRepository: metadataStructureRepository,
+		CategoryRepository:          categoryRepository,
+		SchemaService:               schemaService,
+	}
 
 	// Handler
 	brandHandler := handlers.NewBrandHandler(brandService)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 	locationHandler := handlers.NewLocationHandler(locationService)
 	itemHandler := handlers.NewItemHandler(itemService)
-
+	metadataStructureHandler := handlers.NewMetadataStructureHandler(metadataStructureService)
 
 	// Router
 	r := chi.NewRouter()
@@ -73,7 +87,7 @@ func main() {
 	routes.CategoryRoutes(r, categoryHandler)
 	routes.LocationRoutes(r, locationHandler)
 	routes.ItemRoutes(r, itemHandler)
-
+	routes.MetadataStructureRoutes(r, metadataStructureHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -10,14 +10,15 @@ import (
 )
 
 type CreateItemRequest struct {
-	BrandID       *uint64 `json:"brand_id,omitempty"`
-	CategoryID    uint64  `json:"category_id"`
-	LocationID    *uint64 `json:"location_id,omitempty"`
-	AssetCode     string  `json:"asset_code"`
-	Name          string  `json:"name"`
-	ItemCondition string  `json:"item_condition"`
-	ItemStatus    string  `json:"item_status"`
-	Notes         *string `json:"notes,omitempty"`
+	BrandID       *uint64        `json:"brand_id,omitempty"`
+	CategoryID    uint64         `json:"category_id"`
+	LocationID    *uint64        `json:"location_id,omitempty"`
+	AssetCode     string         `json:"asset_code"`
+	Name          string         `json:"name"`
+	ItemCondition string         `json:"item_condition"`
+	ItemStatus    string         `json:"item_status"`
+	Notes         *string        `json:"notes,omitempty"`
+	Metadata      map[string]any `json:"metadata,omitempty"`
 }
 
 type UpdateItemRequest struct {
@@ -32,18 +33,19 @@ type UpdateItemRequest struct {
 }
 
 type ItemResponse struct {
-	ID            uint64    `json:"id"`
-	BrandID       *uint64   `json:"brand_id,omitempty"`
-	CategoryID    uint64    `json:"category_id"`
-	LocationID    *uint64   `json:"location_id,omitempty"`
-	AssetCode     string    `json:"asset_code"`
-	Name          string    `json:"name"`
-	Slug          string    `json:"slug"`
-	ItemCondition string    `json:"item_condition"`
-	ItemStatus    string    `json:"item_status"`
-	Notes         *string   `json:"notes,omitempty"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID            uint64         `json:"id"`
+	BrandID       *uint64        `json:"brand_id,omitempty"`
+	CategoryID    uint64         `json:"category_id"`
+	LocationID    *uint64        `json:"location_id,omitempty"`
+	AssetCode     string         `json:"asset_code"`
+	Name          string         `json:"name"`
+	Slug          string         `json:"slug"`
+	ItemCondition string         `json:"item_condition"`
+	ItemStatus    string         `json:"item_status"`
+	Notes         *string        `json:"notes,omitempty"`
+	Metadata      map[string]any `json:"metadata,omitempty"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
 }
 
 func (r CreateItemRequest) ToModel() *models.Item {

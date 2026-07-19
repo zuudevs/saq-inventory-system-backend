@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	ITEM_TABLE_NAME = `table_item`
+	ITEM_TABLE_NAME  = `table_item`
 	ITEM_FIND_FIELDS = `
 		id,
 		brand_id,
@@ -97,13 +97,21 @@ func (r *ItemRepository) FindByID(id uint64) (*models.Item, error) {
 }
 
 func (r *ItemRepository) Create(item *models.Item) error {
+	return r.CreateWithExecutor(r.db, item)
+}
+
+// CreateWithExecutor sama seperti Create, tapi menerima sqlExecutor
+// eksplisit (bisa *sqlx.DB atau *sqlx.Tx) supaya pemanggil bisa
+// menyertakan operasi ini di dalam transaction yang lebih besar, mis.
+// bersamaan dengan insert metadata dinamis di table_<slug>_metadata.
+func (r *ItemRepository) CreateWithExecutor(exec sqlExecutor, item *models.Item) error {
 	query := `
 		INSERT INTO ` + ITEM_TABLE_NAME + ` 
 		(` + ITEM_CREATE_FIELDS + `)
 		VALUES ` + ITEM_PLACEHOLDER + `
 	`
 
-	result, err := r.db.Exec(
+	result, err := exec.Exec(
 		query,
 		item.BrandID,
 		item.CategoryID,
@@ -126,11 +134,11 @@ func (r *ItemRepository) Create(item *models.Item) error {
 
 	item.ID = uint64(id)
 
-	return r.db.Get(
+	return exec.Get(
 		item,
 		`
-		SELECT ` + ITEM_FIND_FIELDS + `
-		FROM ` + ITEM_TABLE_NAME + `
+		SELECT `+ITEM_FIND_FIELDS+`
+		FROM `+ITEM_TABLE_NAME+`
 		WHERE id = ?
 		`,
 		item.ID,
@@ -165,8 +173,8 @@ func (r *ItemRepository) Update(item *models.Item) error {
 	return r.db.Get(
 		item,
 		`
-		SELECT ` + ITEM_FIND_FIELDS + `
-		FROM ` + ITEM_TABLE_NAME + `
+		SELECT `+ITEM_FIND_FIELDS+`
+		FROM `+ITEM_TABLE_NAME+`
 		WHERE id = ?
 		`,
 		item.ID,
