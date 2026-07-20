@@ -26,8 +26,8 @@ type MetadataStructureService struct {
 //  3. Generate & eksekusi CREATE TABLE lewat SchemaService.
 //  4. Simpan definisi field ke table_metadata_structure.
 //
-// Langkah 3 adalah DDL yang men-trigger implicit commit di MySQL, sehingga
-// tidak bisa benar-benar atomic dengan langkah 4. Bila langkah 4 gagal
+// Langkah 3 dieksekusi di luar transaction (lihat Service.CreateMetadataTable),
+// sehingga tidak benar-benar atomic dengan langkah 4. Bila langkah 4 gagal
 // setelah tabel berhasil dibuat, service melakukan compensating action
 // (DROP TABLE) supaya table_metadata_structure dan tabel fisik tetap
 // konsisten satu sama lain.

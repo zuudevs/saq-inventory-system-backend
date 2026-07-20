@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
@@ -19,12 +20,18 @@ import (
 func main() {
 	godotenv.Load()
 
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		log.Fatal("DB_PATH is not set")
+	}
+
+	dir := filepath.Dir(dbPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		log.Fatal(err)
+	}
+
 	db, err := config.NewDatabase(
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASS"),
-		os.Getenv("DB_NAME"),
+		dbPath,
 	)
 
 	if err != nil {
@@ -33,7 +40,7 @@ func main() {
 
 	defer db.Close()
 
-	log.Println("Connected to MySQL")
+	log.Println("Connected to SQLite")
 
 	// Repository
 	brandRepository := repositories.NewBrandRepository(db)

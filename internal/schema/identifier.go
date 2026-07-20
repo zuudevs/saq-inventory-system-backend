@@ -58,7 +58,7 @@ func QuoteIdentifier(name string) string {
 }
 
 // ValidateTableName memvalidasi nama tabel metadata final (termasuk
-// prefix/suffix) tidak melebihi batas MySQL (64 karakter).
+// prefix/suffix) tidak melebihi batas panjang identifier (64 karakter).
 func ValidateTableName(tableName string) error {
 	if len(tableName) > MaxIdentifierLength {
 		return fmt.Errorf(

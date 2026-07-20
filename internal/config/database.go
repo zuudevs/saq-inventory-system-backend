@@ -1,31 +1,18 @@
 package config
 
 import (
-	"fmt"
-
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	_ "modernc.org/sqlite"
 )
 
-func NewDatabase(
-	host,
-	port,
-	user,
-	pass,
-	name string,
-) (*sqlx.DB, error) {
-
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		user,
-		pass,
-		host,
-		port,
-		name,
-	)
-
-	db, err := sqlx.Connect("mysql", dsn)
+func NewDatabase(path string) (*sqlx.DB, error) {
+	db, err := sqlx.Connect("sqlite", path)
 	if err != nil {
+		return nil, err
+	}
+
+	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
+		_ = db.Close()
 		return nil, err
 	}
 

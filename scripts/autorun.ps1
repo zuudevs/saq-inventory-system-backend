@@ -11,13 +11,12 @@ $ENV_FILE      = Join-Path $ROOT ".env"
 # Load .env
 Import-DotEnv -Path $ENV_FILE
 
-# MySQL DSN
-$DSN = "$($env:DB_USER):$($env:DB_PASS)@tcp($($env:DB_HOST):$($env:DB_PORT))/$($env:DB_NAME)?parseTime=true"
+$DB_PATH = Join-Path $ROOT $env:DB_PATH
 
 # Run migrations
 goose `
     -dir $MIGRATION_DIR `
-    mysql $DSN `
+    sqlite $DB_PATH `
     up
 
 if ($LASTEXITCODE -ne 0) {

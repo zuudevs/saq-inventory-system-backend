@@ -1,14 +1,14 @@
 -- +goose Up
 CREATE TABLE IF NOT EXISTS `table_location` (
-    `id` BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    `name` VARCHAR(64) NOT NULL,
-    `slug` VARCHAR(64) UNIQUE NOT NULL,
-    `room_code` VARCHAR(32) NULL,
+    `name` TEXT NOT NULL,
+    `slug` TEXT UNIQUE NOT NULL,
+    `room_code` TEXT NULL,
     `description` TEXT NULL,
 
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- +goose Down

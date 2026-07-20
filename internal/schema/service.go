@@ -23,19 +23,27 @@ func (s *Service) TableName(categorySlug string) string {
 	return MetadataTableName(categorySlug)
 }
 
-// CreateMetadataTable membangun dan mengeksekusi CREATE TABLE untuk
-// kategori tertentu. MySQL memicu implicit commit untuk setiap DDL,
-// sehingga operasi ini TIDAK ikut serta dalam transaction SQL apa pun —
-// pemanggil (services.MetadataStructureService) bertanggung jawab
-// melakukan compensating action (DropMetadataTable) bila langkah
-// berikutnya setelah ini gagal.
+// CreateMetadataTable membangun dan mengeksekusi CREATE TABLE (plus trigger
+// updated_at) untuk kategori tertentu. Operasi ini TIDAK ikut serta dalam
+// transaction SQL apa pun — pemanggil (services.MetadataStructureService)
+// bertanggung jawab melakukan compensating action (DropMetadataTable) bila
+// langkah berikutnya setelah ini gagal.
 func (s *Service) CreateMetadataTable(categorySlug string, fields []models.MetadataField) error {
 	ddl, err := BuildCreateTableSQL(categorySlug, fields)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.db.Exec(ddl)
+	if _, err := s.db.Exec(ddl); err != nil {
+		return err
+	}
+
+	triggerDDL, err := BuildUpdatedAtTriggerSQL(categorySlug)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.Exec(triggerDDL)
 	return err
 }
 

@@ -73,6 +73,9 @@ func BuildCreateTableSQL(categorySlug string, fields []models.MetadataField) (st
 		if field.Unique {
 			parts = append(parts, "UNIQUE")
 		}
+		if field.Type == models.MetadataFieldTypeEnum {
+			parts = append(parts, enumCheckClause(field, QuoteIdentifier(field.Name)))
+		}
 
 		columnDefs = append(columnDefs, strings.Join(parts, " "))
 	}
@@ -80,15 +83,16 @@ func BuildCreateTableSQL(categorySlug string, fields []models.MetadataField) (st
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "CREATE TABLE %s (\n", QuoteIdentifier(tableName))
-	b.WriteString("    `id` BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,\n")
-	b.WriteString("    `item_id` BIGINT UNSIGNED NOT NULL,\n")
+	
+	b.WriteString("    `id` INTEGER PRIMARY KEY AUTOINCREMENT,\n")
+	b.WriteString("    `item_id` INTEGER NOT NULL,\n")
 
 	for _, col := range columnDefs {
 		fmt.Fprintf(&b, "    %s,\n", col)
 	}
 
 	b.WriteString("    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n")
-	b.WriteString("    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n")
+	b.WriteString("    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n")
 
 	normalizedSlug := strings.ReplaceAll(categorySlug, "-", "_")
 	fkName := "fk_" + normalizedSlug + "_metadata_item"
@@ -103,6 +107,32 @@ func BuildCreateTableSQL(categorySlug string, fields []models.MetadataField) (st
 	b.WriteString(")")
 
 	return b.String(), nil
+}
+
+// BuildUpdatedAtTriggerSQL menyusun DDL CREATE TRIGGER yang mengisi ulang
+// `updated_at` setiap kali baris di-UPDATE, menggantikan peran klausa
+// "ON UPDATE CURRENT_TIMESTAMP" MySQL yang tidak ada di SQLite. Mengikuti
+// pola yang sama dengan trigger tabel statis di migrations/000006.
+// Triggernya otomatis ikut terhapus saat tabelnya di-DROP, jadi
+// BuildDropTableSQL tidak perlu men-drop trigger secara terpisah.
+func BuildUpdatedAtTriggerSQL(categorySlug string) (string, error) {
+	tableName := MetadataTableName(categorySlug)
+	if err := ValidateTableName(tableName); err != nil {
+		return "", err
+	}
+
+	normalizedSlug := strings.ReplaceAll(categorySlug, "-", "_")
+	triggerName := "trg_" + normalizedSlug + "_metadata_updated_at"
+	if len(triggerName) > MaxIdentifierLength {
+		triggerName = triggerName[:MaxIdentifierLength]
+	}
+
+	return fmt.Sprintf(
+		"CREATE TRIGGER %s\nAFTER UPDATE ON %s\nFOR EACH ROW\nWHEN NEW.updated_at = OLD.updated_at\nBEGIN\n    UPDATE %s SET `updated_at` = CURRENT_TIMESTAMP WHERE `id` = OLD.id;\nEND",
+		QuoteIdentifier(triggerName),
+		QuoteIdentifier(tableName),
+		QuoteIdentifier(tableName),
+	), nil
 }
 
 // BuildDropTableSQL menyusun DDL DROP TABLE untuk kompensasi ketika

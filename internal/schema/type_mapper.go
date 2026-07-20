@@ -72,19 +72,28 @@ func columnType(field models.MetadataField) (string, error) {
 			return "", fmt.Errorf("field enum '%s' wajib memiliki minimal satu option", field.Name)
 		}
 
-		quoted := make([]string, len(field.Options))
-		for i, opt := range field.Options {
+		for _, opt := range field.Options {
 			if opt == "" || len(opt) > maxEnumOptionLength {
 				return "", fmt.Errorf("option enum pada field '%s' tidak valid", field.Name)
 			}
-			quoted[i] = "'" + escapeStringLiteral(opt) + "'"
 		}
 
-		return fmt.Sprintf("ENUM(%s)", strings.Join(quoted, ",")), nil
+		return "TEXT", nil
 
 	default:
 		return "", fmt.Errorf("tipe field '%s' tidak dikenali", field.Type)
 	}
+}
+
+// enumCheckClause menyusun fragmen "CHECK (col IN ('a','b'))" yang menegakkan
+// daftar opsi enum, menggantikan peran tipe kolom ENUM(...) di MySQL yang
+// tidak dikenal SQLite. quotedColumn harus sudah melalui QuoteIdentifier.
+func enumCheckClause(field models.MetadataField, quotedColumn string) string {
+	quoted := make([]string, len(field.Options))
+	for i, opt := range field.Options {
+		quoted[i] = "'" + escapeStringLiteral(opt) + "'"
+	}
+	return fmt.Sprintf("CHECK (%s IN (%s))", quotedColumn, strings.Join(quoted, ","))
 }
 
 // escapeStringLiteral meng-escape backslash dan single quote sesuai aturan
