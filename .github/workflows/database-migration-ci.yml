@@ -12,7 +12,7 @@ on:
   pull_request:
     branches:
       - sqlite-main
-	  - "feature/**"
+      - "feature/**"
     paths:
       - "migrations/**"
       - ".github/workflows/database-migration-ci.yml"
