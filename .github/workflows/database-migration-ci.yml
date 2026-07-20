@@ -2,26 +2,25 @@ name: Database Migration CI
 
 on:
   push:
+    branches:
+      - sqlite-main
+      - "feature/**"
     paths:
       - "migrations/**"
       - ".github/workflows/database-migration-ci.yml"
 
   pull_request:
+    branches:
+      - sqlite-main
+	  - "feature/**"
     paths:
       - "migrations/**"
       - ".github/workflows/database-migration-ci.yml"
 
 jobs:
   migration-test:
-    name: Test MySQL Migration
+    name: Test SQLite Migration
     runs-on: ubuntu-latest
-
-    env:
-      DB_HOST: 127.0.0.1
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_USER: root
-      DB_PASS: ${{ secrets.DB_PASS }}
-      DB_NAME: ${{ secrets.DB_NAME }}
 
     steps:
       - name: Checkout Repository
@@ -32,71 +31,47 @@ jobs:
         with:
           go-version: "1.24"
 
-      - name: Start MySQL
-        run: |
-          docker run -d \
-            --name mysql \
-            -e MYSQL_ROOT_PASSWORD=$DB_PASS \
-            -e MYSQL_DATABASE=$DB_NAME \
-            -p "$DB_PORT":3306 \
-            mysql:8.4
-
-      - name: Wait for MySQL
-        run: |
-          until docker exec mysql mysqladmin ping \
-            -h"$DB_HOST" \
-            -p"$DB_PASS" \
-            --silent; do
-            sleep 2
-          done
-
       - name: Install Goose
         run: |
           go install github.com/pressly/goose/v3/cmd/goose@latest
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
+      - name: Create SQLite Database
+        run: |
+          mkdir -p database
+          touch database/database.db
+
       - name: Run Migration Up
         run: |
           goose \
             -dir migrations \
-            mysql \
-            "$DB_USER:$DB_PASS@tcp($DB_HOST:$DB_PORT)/$DB_NAME" \
+            sqlite3 \
+            database/database.db \
             up
 
-      - name: Verify Database Schema
+      - name: Verify Tables
         run: |
           sudo apt-get update
-          sudo apt-get install -y mysql-client
+          sudo apt-get install -y sqlite3
 
-          mysql \
-            -h $DB_HOST \
-            -P $DB_PORT \
-            -u$DB_USER \
-            -p$DB_PASS \
-            $DB_NAME \
-            -e "
-              SHOW TABLES;
+          sqlite3 database/database.db <<EOF
+          .tables
 
-              SELECT table_name
-              FROM information_schema.tables
-              WHERE table_schema='$DB_NAME'
-              AND table_name IN (
-                'table_category',
-                'table_location',
-                'table_brand',
-                'table_item'
-              );
-            "
+          SELECT name
+          FROM sqlite_master
+          WHERE type='table'
+          AND name IN (
+            'table_category',
+            'table_location',
+            'table_brand',
+            'table_item'
+          );
+          EOF
 
       - name: Test Migration Down
         run: |
           goose \
             -dir migrations \
-            mysql \
-            "$DB_USER:$DB_PASS@tcp($DB_HOST:$DB_PORT)/$DB_NAME" \
+            sqlite3 \
+            database/database.db \
             down
-
-      - name: Stop MySQL
-        if: always()
-        run: |
-          docker rm -f mysql

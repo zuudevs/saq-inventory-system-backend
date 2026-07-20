@@ -3,16 +3,29 @@ name: Docker Build CI
 on:
   push:
     branches:
-      - main
+      - sqlite-main
+      - "feature/**"
+    paths:
+      - ".github/workflows/docker-build-ci.yml"
+      - ".dockerignore"
+      - "Dockerfile"
 
   pull_request:
     branches:
-      - main
+      - sqlite-main
+      - "feature/**"
+    paths:
+      - ".github/workflows/docker-build-ci.yml"
+      - ".dockerignore"
+      - "Dockerfile"
 
 jobs:
   docker-build:
     name: Build Backend Docker Image
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout Repository
@@ -28,5 +41,12 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          push: false
           tags: saq-inventory-backend:latest
+          push: false
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify Docker Image
+        run: |
+          docker image inspect saq-inventory-backend:latest

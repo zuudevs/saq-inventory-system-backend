@@ -12,6 +12,11 @@ $ENV_FILE      = Join-Path $ROOT ".env"
 Import-DotEnv -Path $ENV_FILE
 
 $DB_PATH = Join-Path $ROOT $env:DB_PATH
+$DB_DIR = Split-Path $DB_PATH -Parent
+
+if (-not (Test-Path $DB_DIR)) {
+    New-Item -ItemType Directory -Path $DB_DIR -Force | Out-Null
+}
 
 # Run migrations
 goose `
