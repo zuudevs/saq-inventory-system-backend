@@ -45,6 +45,16 @@ func ItemRoutes(r chi.Router, h *handlers.ItemHandler) {
 	})
 }
 
+func ImageRoutes(r chi.Router, h *handlers.ImageHandler) {
+	r.Route("/images", func(r chi.Router) {
+		r.Get("/", h.FindAll)
+		r.Get("/{id}", h.FindByID)
+		r.Post("/", h.Create)
+		r.Put("/{id}", h.Update)
+		r.Delete("/{id}", h.Delete)
+	})
+}
+
 func MetadataStructureRoutes(r chi.Router, h *handlers.MetadataStructureHandler) {
 	r.Route("/categories/{categoryId}/metadata-structure", func(r chi.Router) {
 		r.Get("/", h.FindByCategoryID)

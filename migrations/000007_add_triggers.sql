@@ -1,6 +1,7 @@
--- +goose up
+-- +goose Up
 
 -- +goose StatementBegin
+
 CREATE TRIGGER `trg_table_category_updated_at`
 AFTER UPDATE ON `table_category`
 FOR EACH ROW
@@ -10,6 +11,7 @@ BEGIN
     SET `updated_at` = CURRENT_TIMESTAMP
     WHERE `id` = OLD.id;
 END;
+
 -- +goose StatementEnd
 
 -- +goose StatementBegin
@@ -23,6 +25,7 @@ BEGIN
     SET `updated_at` = CURRENT_TIMESTAMP
     WHERE `id` = OLD.id;
 END;
+
 -- +goose StatementEnd
 
 -- +goose StatementBegin
@@ -36,6 +39,7 @@ BEGIN
     SET `updated_at` = CURRENT_TIMESTAMP
     WHERE `id` = OLD.id;
 END;
+
 -- +goose StatementEnd
 
 -- +goose StatementBegin
@@ -49,6 +53,21 @@ BEGIN
     SET `updated_at` = CURRENT_TIMESTAMP
     WHERE `id` = OLD.id;
 END;
+
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+
+CREATE TRIGGER `trg_table_image_updated_at`
+AFTER UPDATE ON `table_image`
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+    UPDATE `table_image`
+    SET `updated_at` = CURRENT_TIMESTAMP
+    WHERE `id` = OLD.id;
+END;
+
 -- +goose StatementEnd
 
 -- +goose StatementBegin
@@ -64,10 +83,11 @@ BEGIN
 END;
 -- +goose StatementEnd
 
--- +goose down
+-- +goose Down
 
 DROP TRIGGER IF EXISTS `trg_table_category_updated_at`;
 DROP TRIGGER IF EXISTS `trg_table_brand_updated_at`;
 DROP TRIGGER IF EXISTS `trg_table_location_updated_at`;
 DROP TRIGGER IF EXISTS `trg_table_item_updated_at`;
+DROP TRIGGER IF EXISTS `trg_table_image_updated_at`;
 DROP TRIGGER IF EXISTS `trg_table_metadata_structure_updated_at`;

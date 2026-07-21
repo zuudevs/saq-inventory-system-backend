@@ -49,6 +49,7 @@ func main() {
 	itemRepository := repositories.NewItemRepository(db)
 	metadataStructureRepository := repositories.NewMetadataStructureRepository(db)
 	metadataRepository := repositories.NewMetadataRepository(db)
+	imageRepository := repositories.NewImageRepository(db)
 
 	// Schema
 	schemaService := schema.NewService(db)
@@ -80,12 +81,20 @@ func main() {
 		SchemaService:               schemaService,
 	}
 
+	imageService := &services.ImageService{
+		DB:                 db,
+		ImageRepository:    imageRepository,
+		ItemRepository:     itemRepository,
+		LocationRepository: locationRepository,
+	}
+
 	// Handler
 	brandHandler := handlers.NewBrandHandler(brandService)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 	locationHandler := handlers.NewLocationHandler(locationService)
 	itemHandler := handlers.NewItemHandler(itemService)
 	metadataStructureHandler := handlers.NewMetadataStructureHandler(metadataStructureService)
+	imageHandler := handlers.NewImageHandler(imageService)
 
 	// Router
 	r := chi.NewRouter()
@@ -95,6 +104,7 @@ func main() {
 	routes.LocationRoutes(r, locationHandler)
 	routes.ItemRoutes(r, itemHandler)
 	routes.MetadataStructureRoutes(r, metadataStructureHandler)
+	routes.ImageRoutes(r, imageHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
