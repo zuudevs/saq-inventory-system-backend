@@ -36,6 +36,15 @@ type ImageResponse struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+// UploadImageResponse adalah balasan dari POST /images/upload — cuma berisi
+// path relatif hasil simpan file, belum jadi record table_image. Client
+// dipisahkan jadi dua langkah (upload dulu, baru create/update) supaya
+// upload yang gagal karena owner tidak valid tidak meninggalkan file yatim,
+// dan supaya reupload/ganti gambar tidak harus create record baru.
+type UploadImageResponse struct {
+	ImagePath string `json:"image_path"`
+}
+
 func (r CreateImageRequest) ToModel() *models.Image {
 	return &models.Image{
 		LocationID: r.LocationID,

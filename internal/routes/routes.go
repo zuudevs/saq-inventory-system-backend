@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/handlers"
 )
@@ -50,9 +52,20 @@ func ImageRoutes(r chi.Router, h *handlers.ImageHandler) {
 		r.Get("/", h.FindAll)
 		r.Get("/{id}", h.FindByID)
 		r.Post("/", h.Create)
+		r.Post("/upload", h.Upload)
 		r.Put("/{id}", h.Update)
 		r.Delete("/{id}", h.Delete)
 	})
+}
+
+// StorageRoutes menge-serve file statis di dalam storagePath (hasil
+// SaveImageFile) lewat prefix "/storage/". image_path yang tersimpan di DB
+// (mis. "images/<uuid>.png") jadi bisa diakses via GET /storage/images/<uuid>.png.
+// http.Dir + http.FileServer sudah aman terhadap path traversal secara
+// bawaan (path dibersihkan sebelum dibuka), jadi tidak perlu validasi manual.
+func StorageRoutes(r chi.Router, storagePath string) {
+	fileServer := http.FileServer(http.Dir(storagePath))
+	r.Handle("/storage/*", http.StripPrefix("/storage/", fileServer))
 }
 
 func MetadataStructureRoutes(r chi.Router, h *handlers.MetadataStructureHandler) {

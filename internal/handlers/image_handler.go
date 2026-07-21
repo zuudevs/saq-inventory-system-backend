@@ -13,12 +13,62 @@ import (
 
 type ImageHandler struct {
 	ImageService *services.ImageService
+	StoragePath  string
 }
 
-func NewImageHandler(service *services.ImageService) *ImageHandler {
+func NewImageHandler(service *services.ImageService, storagePath string) *ImageHandler {
 	return &ImageHandler{
 		ImageService: service,
+		StoragePath:  storagePath,
 	}
+}
+
+// Upload menerima multipart/form-data dengan field "file", menyimpannya ke
+// disk, dan mengembalikan path relatifnya. Endpoint ini terpisah dari
+// Create/Update dengan sengaja: client upload file dulu lewat sini, dapat
+// image_path, baru kirim image_path itu ke POST/PUT /images — supaya upload
+// yang gagal validasi owner (item/location tidak ada) tidak perlu bongkar
+// pasang multipart request lagi, dan supaya ganti gambar pada image yang
+// sudah ada bisa upload dulu sebelum PUT.
+func (h *ImageHandler) Upload(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(utils.MaxImageUploadSize); err != nil {
+		utils.JSON(
+			w,
+			http.StatusBadRequest,
+			dto.Error[any]("invalid multipart form or file too large"),
+		)
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		utils.JSON(
+			w,
+			http.StatusBadRequest,
+			dto.Error[any]("file is required"),
+		)
+		return
+	}
+	defer file.Close()
+
+	relativePath, err := utils.SaveImageFile(h.StoragePath, file, header)
+	if err != nil {
+		utils.JSON(
+			w,
+			http.StatusBadRequest,
+			dto.Error[any](err.Error()),
+		)
+		return
+	}
+
+	utils.JSON(
+		w,
+		http.StatusCreated,
+		dto.Success(
+			"file uploaded successfully",
+			dto.UploadImageResponse{ImagePath: relativePath},
+		),
+	)
 }
 
 func (h *ImageHandler) Create(w http.ResponseWriter, r *http.Request) {

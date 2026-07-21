@@ -9,10 +9,12 @@ import (
 	"github.com/zuudevs/saq-inventory-system-backend/internal/dto"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/models"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/repositories"
+	"github.com/zuudevs/saq-inventory-system-backend/internal/utils"
 )
 
 type ImageService struct {
 	DB                 *sqlx.DB
+	StoragePath        string
 	ImageRepository    *repositories.ImageRepository
 	ItemRepository     *repositories.ItemRepository
 	LocationRepository *repositories.LocationRepository
@@ -24,6 +26,10 @@ type ImageService struct {
 // transaction — wajib atomic karena idx_image_item_primary /
 // idx_image_location_primary adalah unique partial index, jadi dua baris
 // is_primary = 1 untuk owner yang sama akan ditolak oleh SQLite.
+//
+// ImagePath di sini diasumsikan sudah berupa hasil POST /images/upload
+// (path relatif di dalam StoragePath) — Create tidak melakukan upload file,
+// cuma menyimpan pointer ke file yang sudah ada di disk.
 func (s *ImageService) Create(req dto.CreateImageRequest) (*dto.ImageResponse, error) {
 	image := req.ToModel()
 
@@ -112,6 +118,10 @@ func (s *ImageService) FindByID(id uint64) (*dto.ImageResponse, error) {
 // jadi owner image tetap sama dengan sebelumnya — hanya image_path dan
 // is_primary yang bisa berubah. Sama seperti Create, perubahan is_primary
 // jadi true dijalankan dalam transaction bersama unset primary lama.
+//
+// Kalau image_path berubah (client upload file baru buat gantiin yang lama),
+// file fisik lama dihapus best-effort setelah record berhasil diupdate —
+// supaya tidak ada file yatim menumpuk di storage.
 func (s *ImageService) Update(id uint64, req dto.UpdateImageRequest) (*dto.ImageResponse, error) {
 	image, err := s.ImageRepository.FindByID(id)
 	if err != nil {
@@ -121,6 +131,7 @@ func (s *ImageService) Update(id uint64, req dto.UpdateImageRequest) (*dto.Image
 		return nil, nil
 	}
 
+	oldImagePath := image.ImagePath
 	wasPrimary := image.IsPrimary
 
 	req.Apply(image)
@@ -129,38 +140,58 @@ func (s *ImageService) Update(id uint64, req dto.UpdateImageRequest) (*dto.Image
 		return nil, errors.New("image_path is required")
 	}
 
-	if !image.IsPrimary || wasPrimary {
-		if err := s.ImageRepository.Update(image); err != nil {
+	if image.IsPrimary && !wasPrimary {
+		tx, err := s.DB.Beginx()
+		if err != nil {
 			return nil, err
 		}
 
-		return dto.ToImageResponse(image), nil
+		if err := s.unsetExistingPrimary(tx, image, image.ID); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		if err := s.ImageRepository.UpdateWithExecutor(tx, image); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		if err := tx.Commit(); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := s.ImageRepository.Update(image); err != nil {
+			return nil, err
+		}
 	}
 
-	tx, err := s.DB.Beginx()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := s.unsetExistingPrimary(tx, image, image.ID); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := s.ImageRepository.UpdateWithExecutor(tx, image); err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, err
+	if image.ImagePath != oldImagePath {
+		_ = utils.DeleteImageFile(s.StoragePath, oldImagePath)
 	}
 
 	return dto.ToImageResponse(image), nil
 }
 
+// Delete menghapus record table_image, lalu best-effort menghapus file
+// fisiknya juga. Kegagalan hapus file fisik sengaja tidak membatalkan
+// (rollback) penghapusan record — kalau dibalik, file yang sudah kepencet
+// manual duluan bakal bikin record tidak pernah bisa dihapus.
 func (s *ImageService) Delete(id uint64) error {
-	return s.ImageRepository.Delete(id)
+	image, err := s.ImageRepository.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if image == nil {
+		return nil
+	}
+
+	if err := s.ImageRepository.Delete(id); err != nil {
+		return err
+	}
+
+	_ = utils.DeleteImageFile(s.StoragePath, image.ImagePath)
+
+	return nil
 }
 
 func (s *ImageService) ensureOwnerExists(image *models.Image) error {
