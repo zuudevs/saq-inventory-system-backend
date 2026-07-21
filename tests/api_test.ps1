@@ -94,10 +94,10 @@ function Import-DotEnvFile {
 
 function Get-NativeCurlCommand {
     if ($IsWindows) {
-        $cmd = Get-Command curl.exe -CommandType Application -ErrorAction SilentlyContinue
+        $cmd = Get-Command curl.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($cmd) { return $cmd.Source }
     } else {
-        $cmd = Get-Command curl -CommandType Application -ErrorAction SilentlyContinue
+        $cmd = Get-Command curl -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($cmd) { return $cmd.Source }
     }
 
