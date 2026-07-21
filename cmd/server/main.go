@@ -30,6 +30,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	storagePath := os.Getenv("STORAGE_PATH")
+	if storagePath == "" {
+		storagePath = "./storage"
+	}
+
+	if err := os.MkdirAll(storagePath, 0755); err != nil {
+		log.Fatal(err)
+	}
+
 	db, err := config.NewDatabase(
 		dbPath,
 	)
@@ -49,6 +58,7 @@ func main() {
 	itemRepository := repositories.NewItemRepository(db)
 	metadataStructureRepository := repositories.NewMetadataStructureRepository(db)
 	metadataRepository := repositories.NewMetadataRepository(db)
+	imageRepository := repositories.NewImageRepository(db)
 
 	// Schema
 	schemaService := schema.NewService(db)
@@ -80,12 +90,21 @@ func main() {
 		SchemaService:               schemaService,
 	}
 
+	imageService := &services.ImageService{
+		DB:                 db,
+		StoragePath:        storagePath,
+		ImageRepository:    imageRepository,
+		ItemRepository:     itemRepository,
+		LocationRepository: locationRepository,
+	}
+
 	// Handler
 	brandHandler := handlers.NewBrandHandler(brandService)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 	locationHandler := handlers.NewLocationHandler(locationService)
 	itemHandler := handlers.NewItemHandler(itemService)
 	metadataStructureHandler := handlers.NewMetadataStructureHandler(metadataStructureService)
+	imageHandler := handlers.NewImageHandler(imageService, storagePath)
 
 	// Router
 	r := chi.NewRouter()
@@ -95,6 +114,8 @@ func main() {
 	routes.LocationRoutes(r, locationHandler)
 	routes.ItemRoutes(r, itemHandler)
 	routes.MetadataStructureRoutes(r, metadataStructureHandler)
+	routes.ImageRoutes(r, imageHandler)
+	routes.StorageRoutes(r, storagePath)
 
 	port := os.Getenv("PORT")
 	if port == "" {

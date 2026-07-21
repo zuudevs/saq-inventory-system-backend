@@ -21,9 +21,9 @@ const (
 
 type Item struct {
 	ID            uint64         `db:"id" json:"id"`
-	BrandID       *uint64        `db:"brand_id" json:"brand_id"`
+	BrandID       *uint64        `db:"brand_id" json:"brand_id,omitempty"`
 	CategoryID    uint64         `db:"category_id" json:"category_id"`
-	LocationID    *uint64        `db:"location_id" json:"location_id"`
+	LocationID    *uint64        `db:"location_id" json:"location_id,omitempty"`
 	AssetCode     string         `db:"asset_code" json:"asset_code"`
 	Name          string         `db:"name" json:"name"`
 	Slug          string         `db:"slug" json:"slug"`
