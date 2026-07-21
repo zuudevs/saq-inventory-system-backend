@@ -3,9 +3,10 @@
     Test script CRUD lengkap untuk semua endpoint SAQ Inventory System Backend.
 
 .DESCRIPTION
-    Memakai curl.exe (BUKAN Invoke-WebRequest/Invoke-RestMethod) supaya
-    perilaku request/response persis seperti dipanggil dari luar PowerShell
-    (mis. dari Postman/curl asli), dan gampang di-debug manual di terminal.
+    Memakai native curl (BUKAN Invoke-WebRequest/Invoke-RestMethod) supaya
+    perilaku request/response tetap konsisten seperti panggilan luar
+    PowerShell (mis. dari Postman/curl asli), dan tetap bisa jalan di
+    Windows maupun GitHub Actions Ubuntu.
     Konvensinya sama seperti scripts/monitor_flow_test.ps1 di project ini.
 
     Urutan test (dependency-aware, dibersihkan lagi di akhir):
@@ -48,12 +49,64 @@ param(
 $ErrorActionPreference = "Stop"
 
 $ROOT     = Resolve-Path (Join-Path $PSScriptRoot "..")
-$TOOL_DIR = Join-Path $ROOT "tools"
 $ENV_FILE = Join-Path $ROOT ".env"
 
-# Load .env (butuh $env:PORT)
-. (Join-Path $TOOL_DIR "zuu-powershell-dotenv/Import-DotEnv.ps1")
-Import-DotEnv -Path $ENV_FILE
+function Import-DotEnvFile {
+    param(
+        [Parameter(Mandatory = $true)][string] $Path
+    )
+
+    if (-not (Test-Path $Path)) {
+        Write-Host "Warning: .env not found at $Path" -ForegroundColor Yellow
+        return
+    }
+
+    foreach ($lineRaw in Get-Content $Path) {
+        $line = $lineRaw.Trim()
+
+        if (-not $line -or $line.StartsWith("#")) {
+            continue
+        }
+
+        if ($line.StartsWith("export ")) {
+            $line = $line.Substring(7).Trim()
+        }
+
+        if ($line -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$') {
+            continue
+        }
+
+        $key = $matches[1]
+        $value = $matches[2].Trim()
+
+        if (($value.StartsWith('"') -and $value.EndsWith('"')) -or
+            ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+            $value = $value.Substring(1, $value.Length - 2)
+        }
+
+        [System.Environment]::SetEnvironmentVariable(
+            $key,
+            $value,
+            [System.EnvironmentVariableTarget]::Process
+        )
+    }
+}
+
+function Get-NativeCurlCommand {
+    if ($IsWindows) {
+        $cmd = Get-Command curl.exe -CommandType Application -ErrorAction SilentlyContinue
+        if ($cmd) { return $cmd.Source }
+    } else {
+        $cmd = Get-Command curl -CommandType Application -ErrorAction SilentlyContinue
+        if ($cmd) { return $cmd.Source }
+    }
+
+    throw "Native curl binary not found. Please install curl."
+}
+
+Import-DotEnvFile -Path $ENV_FILE
+
+$script:CurlCommand = Get-NativeCurlCommand
 
 $PORT     = if ($env:PORT) { $env:PORT } else { "8080" }
 $BASE_URL = "http://localhost:$PORT"
@@ -63,7 +116,7 @@ $script:FailCount = 0
 $script:Failures  = @()
 
 # ---------------------------------------------------------------------------
-# Helper: panggil curl.exe, parse JSON response.
+# Helper: panggil native curl, parse JSON response.
 # $ExpectFail = $true dipakai buat test case yang MEMANG diharapkan gagal
 # (mis. GET by id yang sudah dihapus) supaya tidak menghentikan script.
 # ---------------------------------------------------------------------------
@@ -98,7 +151,7 @@ function Invoke-Api {
         $curlArgs += @("-d", $Body)
     }
 
-    $raw = & curl.exe @curlArgs
+    $raw = & $script:CurlCommand @curlArgs
     $lines = $raw -split "`n"
 
     $statusLine = $lines | Where-Object { $_ -like "HTTP_STATUS:*" }
@@ -144,7 +197,7 @@ function Invoke-Api {
 }
 
 function Invoke-ApiRaw {
-    # Buat request non-JSON (mis. multipart upload) langsung lewat curl.exe,
+    # Buat request non-JSON (mis. multipart upload) langsung lewat native curl,
     # tetap hitung pass/fail dari status HTTP.
     param(
         [Parameter(Mandatory = $true)][string[]] $CurlArgs,
@@ -154,7 +207,7 @@ function Invoke-ApiRaw {
     Write-Host ""
     Write-Host "==> [$StepName] (raw curl)" -ForegroundColor Cyan
 
-    $raw = & curl.exe @CurlArgs
+    $raw = & $script:CurlCommand @CurlArgs
     $lines = $raw -split "`n"
     $statusLine = $lines | Where-Object { $_ -like "HTTP_STATUS:*" }
     $statusCode = [int]($statusLine -replace "HTTP_STATUS:", "")
@@ -288,7 +341,8 @@ Invoke-Api -Method "PUT" -Path "/items/$itemId" -Body $itemUpdateBody -StepName 
 Write-Host "`n########## IMAGE ##########" -ForegroundColor Magenta
 
 if ($TestUpload) {
-    $dummyImagePath = Join-Path $env:TEMP "saq_dummy_upload_$suffix.png"
+    $tempDir = if ($env:TEMP) { $env:TEMP } elseif ($env:TMPDIR) { $env:TMPDIR } else { [System.IO.Path]::GetTempPath() }
+    $dummyImagePath = Join-Path $tempDir "saq_dummy_upload_$suffix.png"
     # PNG 1x1 transparan, base64, biar tidak perlu file asli buat test upload.
     $pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
     [IO.File]::WriteAllBytes($dummyImagePath, [Convert]::FromBase64String($pngBase64))
