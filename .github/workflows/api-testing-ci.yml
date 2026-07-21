@@ -1,0 +1,111 @@
+name: API Testing CI
+
+on:
+  push:
+    branches:
+      - sqlite-main
+      - "feature/**"
+    paths:
+      - "internal/**"
+      - "cmd/**"
+      - "internal/routes/**"
+      - "tests/api_test.ps1"
+      - ".github/workflows/api-testing-ci.yml"
+
+  pull_request:
+    branches:
+      - sqlite-main
+      - "feature/**"
+    paths:
+      - "internal/**"
+      - "cmd/**"
+      - "internal/routes/**"
+      - "tests/api_test.ps1"
+      - ".github/workflows/api-testing-ci.yml"
+
+jobs:
+  api-test:
+    name: Test REST API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Install Dependencies
+        run: go mod download
+
+      - name: Install Goose
+        run: |
+          go install github.com/pressly/goose/v3/cmd/goose@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Create Environment File
+        run: |
+          cp .env.example .env
+
+      - name: Create SQLite Database
+        run: |
+          mkdir -p database
+          touch database/saq_inventory_db.db
+
+      - name: Run Database Migration
+        run: |
+          goose \
+            -dir migrations \
+            sqlite3 \
+            database/saq_inventory_db.db \
+            up
+
+      - name: Build Application
+        run: |
+          go build -o app ./cmd/server
+          chmod +x app
+
+      - name: Start API Server
+        env:
+          DB_PATH: ./database/saq_inventory_db.db
+          STORAGE_PATH: ./storage
+          PORT: 8080
+        run: |
+          nohup ./app > server.log 2>&1 &
+          sleep 5
+
+          if ! ps -ef | grep "./app" | grep -v grep; then
+            echo "Server failed to start"
+            cat server.log
+            exit 1
+          fi
+
+    #   - name: Wait Until Server Ready
+    #     run: |
+    #       for i in {1..30}; do
+    #         if curl -fs http://localhost:8080/health >/dev/null; then
+    #           echo "Server is ready."
+    #           exit 0
+    #         fi
+    #         sleep 1
+    #       done
+
+    #       echo "Server failed to start."
+    #       cat server.log
+    #       exit 1
+
+      - name: Run API Test Script
+        shell: pwsh
+        run: |
+          ./tests/api_test.ps1
+
+      - name: Upload Server Log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: server.log
