@@ -68,6 +68,10 @@ jobs:
           chmod +x app
 
       - name: Start API Server
+        env:
+          DB_PATH: ./database/saq_inventory_db.db
+          STORAGE_PATH: ./storage
+          PORT: 8080
         run: |
           nohup ./app > server.log 2>&1 &
           sleep 5
