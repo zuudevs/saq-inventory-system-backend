@@ -92,42 +92,6 @@ func (r *MetadataStructureRepository) Create(structure *models.MetadataStructure
 	)
 }
 
-func (r *ItemRepository) Update(item *models.Item) error {
-	query := `
-		UPDATE ` + kItemTableName + `
-		SET ` + kItemUpdateFields + `
-		WHERE id = ?
-	`
-
-	_, err := r.db.Exec(
-		query,
-		item.BrandID,
-		item.CategoryID,
-		item.LocationID,
-		item.AssetCode,
-		item.Name,
-		item.Slug,
-		item.ItemCondition,
-		item.ItemStatus,
-		item.Notes,
-		item.ID,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	return r.db.Get(
-		item,
-		`
-		SELECT `+kItemFindFields+`
-		FROM `+kItemTableName+`
-		WHERE id = ?
-		`,
-		item.ID,
-	)
-}
-
 func (r *MetadataStructureRepository) Delete(categoryID uint64) error {
 	query := `
 		DELETE FROM ` + kMetadataStructureTableName + `
