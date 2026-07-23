@@ -109,6 +109,7 @@ func main() {
 	// Router
 	r := chi.NewRouter()
 
+	routes.HealthRoutes(r)
 	routes.BrandRoutes(r, brandHandler)
 	routes.CategoryRoutes(r, categoryHandler)
 	routes.LocationRoutes(r, locationHandler)

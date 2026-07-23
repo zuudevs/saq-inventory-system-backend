@@ -7,6 +7,10 @@ import (
 	"github.com/zuudevs/saq-inventory-system-backend/internal/handlers"
 )
 
+func HealthRoutes(r chi.Router) {
+	r.Get("/health", handlers.HealthHandler)
+}
+
 func BrandRoutes(r chi.Router, h *handlers.BrandHandler) {
 	r.Route("/brands", func(r chi.Router) {
 		r.Get("/", h.FindAll)
