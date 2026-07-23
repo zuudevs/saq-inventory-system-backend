@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [Unreleased]
+
+### Added
+* Dynamic schema alter support using `ALTER TABLE` (`ADD COLUMN` and `DROP COLUMN`) when updating a category's metadata structure, preventing data loss in unchanged columns.
+* HTTP endpoint `PUT /categories/{categoryId}/metadata-structure` to update metadata structures dynamically.
+* HTTP endpoint `DELETE /categories/{categoryId}/metadata-structure` to safely delete metadata structures and drop their physical SQLite tables.
+* Restructured integration test suite into modular scripts under `tests/api/` and updated `tests/api_test.ps1`.
+
+### Fixed
+* Category validation check bug (`category == nil`) in `MetadataStructureService.Update`.
+* Fixed database update bug where `structure.ID` was not mapped prior to updating metadata structures.
+
+---
+
 ## [v1.0.0-sqlite-alpha]
 
 ### Added
