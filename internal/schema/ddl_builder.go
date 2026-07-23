@@ -147,3 +147,57 @@ func BuildDropTableSQL(categorySlug string) (string, error) {
 
 	return fmt.Sprintf("DROP TABLE IF EXISTS %s", QuoteIdentifier(tableName)), nil
 }
+
+// BuildAddColumnSQL menyusun DDL ALTER TABLE ADD COLUMN untuk menambahkan field baru ke tabel metadata.
+func BuildAddColumnSQL(categorySlug string, field models.MetadataField) (string, error) {
+	tableName := MetadataTableName(categorySlug)
+	if err := ValidateTableName(tableName); err != nil {
+		return "", err
+	}
+
+	if err := ValidateIdentifier(field.Name); err != nil {
+		return "", err
+	}
+
+	colType, err := columnType(field)
+	if err != nil {
+		return "", err
+	}
+
+	nullability := "NOT NULL"
+	if field.Nullable {
+		nullability = "NULL"
+	}
+
+	def, err := defaultClause(field)
+	if err != nil {
+		return "", err
+	}
+
+	parts := []string{QuoteIdentifier(field.Name), colType, nullability}
+	if def != "" {
+		parts = append(parts, def)
+	}
+	if field.Unique {
+		parts = append(parts, "UNIQUE")
+	}
+	if field.Type == models.MetadataFieldTypeEnum {
+		parts = append(parts, enumCheckClause(field, QuoteIdentifier(field.Name)))
+	}
+
+	return fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s", QuoteIdentifier(tableName), strings.Join(parts, " ")), nil
+}
+
+// BuildDropColumnSQL menyusun DDL ALTER TABLE DROP COLUMN untuk menghapus kolom dari tabel metadata.
+func BuildDropColumnSQL(categorySlug string, columnName string) (string, error) {
+	tableName := MetadataTableName(categorySlug)
+	if err := ValidateTableName(tableName); err != nil {
+		return "", err
+	}
+
+	if err := ValidateIdentifier(columnName); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("ALTER TABLE %s DROP COLUMN %s", QuoteIdentifier(tableName), QuoteIdentifier(columnName)), nil
+}

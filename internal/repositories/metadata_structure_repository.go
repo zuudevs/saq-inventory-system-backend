@@ -23,6 +23,11 @@ const (
 		fields,
 		version
 	`
+	kMetadataStructureUpdateFields = `
+		category_id = ?,
+		fields = ?,
+		version = ?
+	`
 	kMetadataStructurePlaceholder = `(?, ?, ?)`
 )
 
@@ -80,6 +85,36 @@ func (r *MetadataStructureRepository) Create(structure *models.MetadataStructure
 	}
 
 	structure.ID = uint64(id)
+
+	return r.db.Get(
+		structure,
+		`
+		SELECT `+kMetadataStructureFindFields+`
+		FROM `+kMetadataStructureTableName+`
+		WHERE id = ?
+		`,
+		structure.ID,
+	)
+}
+
+func (r *MetadataStructureRepository) Update(structure *models.MetadataStructure) error {
+	query := `
+		UPDATE ` + kMetadataStructureTableName + `
+		SET ` + kMetadataStructureUpdateFields + `
+		WHERE id = ?
+	`
+
+	_, err := r.db.Exec(
+		query,
+		structure.CategoryID,
+		structure.Fields,
+		structure.Version,
+		structure.ID,
+	)
+
+	if err != nil {
+		return err
+	}
 
 	return r.db.Get(
 		structure,
