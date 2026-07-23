@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	IMAGE_TABLE_NAME  = `table_image`
-	IMAGE_FIND_FIELDS = `
+	kImageTableName  = `table_image`
+	kImageFindFields = `
 		id,
 		location_id,
 		item_id,
@@ -18,19 +18,19 @@ const (
 		created_at,
 		updated_at
 	`
-	IMAGE_CREATE_FIELDS = `
+	kImageCreateFields = `
 		location_id,
 		item_id,
 		image_path,
 		is_primary
 	`
-	IMAGE_UPDATE_FIELDS = `
+	kImageUpdateFields = `
 		location_id = ?,
 		item_id = ?,
 		image_path = ?,
 		is_primary = ?
 	`
-	IMAGE_PLACEHOLDER = `(?, ?, ?, ?)`
+	kImagePlaceholder = `(?, ?, ?, ?)`
 )
 
 type ImageRepository struct {
@@ -47,8 +47,8 @@ func (r *ImageRepository) FindAll() ([]models.Image, error) {
 	var images []models.Image
 
 	query := `
-		SELECT ` + IMAGE_FIND_FIELDS + `
-		FROM ` + IMAGE_TABLE_NAME + `
+		SELECT ` + kImageFindFields + `
+		FROM ` + kImageTableName + `
 		ORDER BY
 			item_id IS NULL,
 			COALESCE(item_id, location_id),
@@ -68,8 +68,8 @@ func (r *ImageRepository) FindByItemID(itemID uint64) ([]models.Image, error) {
 	var images []models.Image
 
 	query := `
-		SELECT ` + IMAGE_FIND_FIELDS + `
-		FROM ` + IMAGE_TABLE_NAME + `
+		SELECT ` + kImageFindFields + `
+		FROM ` + kImageTableName + `
 		WHERE item_id = ?
 		ORDER BY is_primary DESC, id ASC
 	`
@@ -86,8 +86,8 @@ func (r *ImageRepository) FindByLocationID(locationID uint64) ([]models.Image, e
 	var images []models.Image
 
 	query := `
-		SELECT ` + IMAGE_FIND_FIELDS + `
-		FROM ` + IMAGE_TABLE_NAME + `
+		SELECT ` + kImageFindFields + `
+		FROM ` + kImageTableName + `
 		WHERE location_id = ?
 		ORDER BY is_primary DESC, id ASC
 	`
@@ -104,8 +104,8 @@ func (r *ImageRepository) FindByID(id uint64) (*models.Image, error) {
 	var image models.Image
 
 	query := `
-		SELECT ` + IMAGE_FIND_FIELDS + `
-		FROM ` + IMAGE_TABLE_NAME + `
+		SELECT ` + kImageFindFields + `
+		FROM ` + kImageTableName + `
 		WHERE id = ?
 		LIMIT 1
 	`
@@ -131,9 +131,9 @@ func (r *ImageRepository) Create(image *models.Image) error {
 // bersamaan dengan insert metadata dinamis di table_<slug>_metadata.
 func (r *ImageRepository) CreateWithExecutor(exec sqlExecutor, image *models.Image) error {
 	query := `
-		INSERT INTO ` + IMAGE_TABLE_NAME + ` 
-		(` + IMAGE_CREATE_FIELDS + `)
-		VALUES ` + IMAGE_PLACEHOLDER + `
+		INSERT INTO ` + kImageTableName + ` 
+		(` + kImageCreateFields + `)
+		VALUES ` + kImagePlaceholder + `
 	`
 
 	result, err := exec.Exec(
@@ -157,8 +157,8 @@ func (r *ImageRepository) CreateWithExecutor(exec sqlExecutor, image *models.Ima
 	return exec.Get(
 		image,
 		`
-		SELECT `+IMAGE_FIND_FIELDS+`
-		FROM `+IMAGE_TABLE_NAME+`
+		SELECT `+kImageFindFields+`
+		FROM `+kImageTableName+`
 		WHERE id = ?
 		`,
 		image.ID,
@@ -175,8 +175,8 @@ func (r *ImageRepository) Update(image *models.Image) error {
 // — perlu atomic karena keduanya menyentuh unique partial index is_primary.
 func (r *ImageRepository) UpdateWithExecutor(exec sqlExecutor, image *models.Image) error {
 	query := `
-		UPDATE ` + IMAGE_TABLE_NAME + `
-		SET ` + IMAGE_UPDATE_FIELDS + `
+		UPDATE ` + kImageTableName + `
+		SET ` + kImageUpdateFields + `
 		WHERE id = ?
 	`
 
@@ -196,8 +196,8 @@ func (r *ImageRepository) UpdateWithExecutor(exec sqlExecutor, image *models.Ima
 	return exec.Get(
 		image,
 		`
-		SELECT `+IMAGE_FIND_FIELDS+`
-		FROM `+IMAGE_TABLE_NAME+`
+		SELECT `+kImageFindFields+`
+		FROM `+kImageTableName+`
 		WHERE id = ?
 		`,
 		image.ID,
@@ -212,7 +212,7 @@ func (r *ImageRepository) UpdateWithExecutor(exec sqlExecutor, image *models.Ima
 // atau update kedua akan gagal dengan UNIQUE constraint violation.
 func (r *ImageRepository) UnsetPrimaryByItemIDWithExecutor(exec sqlExecutor, itemID uint64, excludeID uint64) error {
 	query := `
-		UPDATE ` + IMAGE_TABLE_NAME + `
+		UPDATE ` + kImageTableName + `
 		SET is_primary = 0
 		WHERE item_id = ? AND is_primary = 1 AND id != ?
 	`
@@ -226,7 +226,7 @@ func (r *ImageRepository) UnsetPrimaryByItemIDWithExecutor(exec sqlExecutor, ite
 // untuk idx_image_location_primary.
 func (r *ImageRepository) UnsetPrimaryByLocationIDWithExecutor(exec sqlExecutor, locationID uint64, excludeID uint64) error {
 	query := `
-		UPDATE ` + IMAGE_TABLE_NAME + `
+		UPDATE ` + kImageTableName + `
 		SET is_primary = 0
 		WHERE location_id = ? AND is_primary = 1 AND id != ?
 	`
@@ -238,7 +238,7 @@ func (r *ImageRepository) UnsetPrimaryByLocationIDWithExecutor(exec sqlExecutor,
 
 func (r *ImageRepository) Delete(id uint64) error {
 	query := `
-		DELETE FROM ` + IMAGE_TABLE_NAME + `
+		DELETE FROM ` + kImageTableName + `
 		WHERE id = ?
 	`
 

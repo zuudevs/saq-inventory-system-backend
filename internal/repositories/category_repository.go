@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	CATEGORY_TABLE_NAME  = `table_category`
-	CATEGORY_FIND_FIELDS = `
+	kCategoryTableName  = `table_category`
+	kCategoryFindFields = `
 		id,
 		name,
 		slug,
@@ -17,17 +17,17 @@ const (
 		created_at,
 		updated_at
 	`
-	CATEGORY_CREATE_FIELDS = `
+	kCategoryCreateFields = `
 		name,
 		slug,
 		description
 	`
-	CATEGORY_UPDATE_FIELDS = `
+	kCategoryUpdateFields = `
 		name = ?,
 		slug = ?,
 		description = ?
 	`
-	CATEGORY_PLACEHOLDER = `(?, ?, ?)`
+	kCategoryPlaceholder = `(?, ?, ?)`
 )
 
 type CategoryRepository struct {
@@ -44,8 +44,8 @@ func (r *CategoryRepository) FindAll() ([]models.Category, error) {
 	var categories []models.Category
 
 	query := `
-		SELECT ` + CATEGORY_FIND_FIELDS + `
-		FROM ` + CATEGORY_TABLE_NAME + `
+		SELECT ` + kCategoryFindFields + `
+		FROM ` + kCategoryTableName + `
 		ORDER BY name ASC
 	`
 
@@ -61,8 +61,8 @@ func (r *CategoryRepository) FindByID(id uint64) (*models.Category, error) {
 	var category models.Category
 
 	query := `
-		SELECT ` + CATEGORY_FIND_FIELDS + `
-		FROM ` + CATEGORY_TABLE_NAME + `
+		SELECT ` + kCategoryFindFields + `
+		FROM ` + kCategoryTableName + `
 		WHERE id = ?
 		LIMIT 1
 	`
@@ -80,9 +80,9 @@ func (r *CategoryRepository) FindByID(id uint64) (*models.Category, error) {
 
 func (r *CategoryRepository) Create(category *models.Category) error {
 	query := `
-		INSERT INTO ` + CATEGORY_TABLE_NAME + ` 
-		(` + CATEGORY_CREATE_FIELDS + `)
-		VALUES ` + CATEGORY_PLACEHOLDER + `
+		INSERT INTO ` + kCategoryTableName + ` 
+		(` + kCategoryCreateFields + `)
+		VALUES ` + kCategoryPlaceholder + `
 	`
 
 	result, err := r.db.Exec(
@@ -105,8 +105,8 @@ func (r *CategoryRepository) Create(category *models.Category) error {
 	return r.db.Get(
 		category,
 		`
-		SELECT `+CATEGORY_FIND_FIELDS+`
-		FROM `+CATEGORY_TABLE_NAME+`
+		SELECT `+kCategoryFindFields+`
+		FROM `+kCategoryTableName+`
 		WHERE id = ?
 		`,
 		category.ID,
@@ -115,8 +115,8 @@ func (r *CategoryRepository) Create(category *models.Category) error {
 
 func (r *CategoryRepository) Update(category *models.Category) error {
 	query := `
-		UPDATE ` + CATEGORY_TABLE_NAME + `
-		SET ` + CATEGORY_UPDATE_FIELDS + `
+		UPDATE ` + kCategoryTableName + `
+		SET ` + kCategoryUpdateFields + `
 		WHERE id = ?
 	`
 
@@ -135,8 +135,8 @@ func (r *CategoryRepository) Update(category *models.Category) error {
 	return r.db.Get(
 		category,
 		`
-		SELECT `+CATEGORY_FIND_FIELDS+`
-		FROM `+CATEGORY_TABLE_NAME+`
+		SELECT `+kCategoryFindFields+`
+		FROM `+kCategoryTableName+`
 		WHERE id = ?
 		`,
 		category.ID,
@@ -145,7 +145,7 @@ func (r *CategoryRepository) Update(category *models.Category) error {
 
 func (r *CategoryRepository) Delete(id uint64) error {
 	query := `
-		DELETE FROM ` + CATEGORY_TABLE_NAME + `
+		DELETE FROM ` + kCategoryTableName + `
 		WHERE id = ?
 	`
 
