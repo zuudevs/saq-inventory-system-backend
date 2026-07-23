@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	METADATA_STRUCTURE_TABLE_NAME  = `table_metadata_structure`
-	METADATA_STRUCTURE_FIND_FIELDS = `
+	kMetadataStructureTableName  = `table_metadata_structure`
+	kMetadataStructureFindFields = `
 		id,
 		category_id,
 		fields,
@@ -18,12 +18,12 @@ const (
 		created_at,
 		updated_at
 	`
-	METADATA_STRUCTURE_CREATE_FIELDS = `
+	kMetadataStructureCreateFields = `
 		category_id,
 		fields,
 		version
 	`
-	METADATA_STRUCTURE_PLACEHOLDER = `(?, ?, ?)`
+	kMetadataStructurePlaceholder = `(?, ?, ?)`
 )
 
 type MetadataStructureRepository struct {
@@ -40,8 +40,8 @@ func (r *MetadataStructureRepository) FindByCategoryID(categoryID uint64) (*mode
 	var structure models.MetadataStructure
 
 	query := `
-		SELECT ` + METADATA_STRUCTURE_FIND_FIELDS + `
-		FROM ` + METADATA_STRUCTURE_TABLE_NAME + `
+		SELECT ` + kMetadataStructureFindFields + `
+		FROM ` + kMetadataStructureTableName + `
 		WHERE category_id = ?
 		LIMIT 1
 	`
@@ -59,9 +59,9 @@ func (r *MetadataStructureRepository) FindByCategoryID(categoryID uint64) (*mode
 
 func (r *MetadataStructureRepository) Create(structure *models.MetadataStructure) error {
 	query := `
-		INSERT INTO ` + METADATA_STRUCTURE_TABLE_NAME + ` 
-		(` + METADATA_STRUCTURE_CREATE_FIELDS + `)
-		VALUES ` + METADATA_STRUCTURE_PLACEHOLDER + `
+		INSERT INTO ` + kMetadataStructureTableName + ` 
+		(` + kMetadataStructureCreateFields + `)
+		VALUES ` + kMetadataStructurePlaceholder + `
 	`
 
 	result, err := r.db.Exec(
@@ -84,17 +84,53 @@ func (r *MetadataStructureRepository) Create(structure *models.MetadataStructure
 	return r.db.Get(
 		structure,
 		`
-		SELECT `+METADATA_STRUCTURE_FIND_FIELDS+`
-		FROM `+METADATA_STRUCTURE_TABLE_NAME+`
+		SELECT `+kMetadataStructureFindFields+`
+		FROM `+kMetadataStructureTableName+`
 		WHERE id = ?
 		`,
 		structure.ID,
 	)
 }
 
+func (r *ItemRepository) Update(item *models.Item) error {
+	query := `
+		UPDATE ` + kItemTableName + `
+		SET ` + kItemUpdateFields + `
+		WHERE id = ?
+	`
+
+	_, err := r.db.Exec(
+		query,
+		item.BrandID,
+		item.CategoryID,
+		item.LocationID,
+		item.AssetCode,
+		item.Name,
+		item.Slug,
+		item.ItemCondition,
+		item.ItemStatus,
+		item.Notes,
+		item.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return r.db.Get(
+		item,
+		`
+		SELECT `+kItemFindFields+`
+		FROM `+kItemTableName+`
+		WHERE id = ?
+		`,
+		item.ID,
+	)
+}
+
 func (r *MetadataStructureRepository) Delete(categoryID uint64) error {
 	query := `
-		DELETE FROM ` + METADATA_STRUCTURE_TABLE_NAME + `
+		DELETE FROM ` + kMetadataStructureTableName + `
 		WHERE category_id = ?
 	`
 

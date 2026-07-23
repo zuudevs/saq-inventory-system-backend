@@ -8,23 +8,23 @@ import (
 )
 
 const (
-	BRAND_TABLE_NAME  = `table_brand`
-	BRAND_FIND_FIELDS = `
+	kBrandTableName  = `table_brand`
+	kBrandFindFields = `
 		id,
 		name,
 		slug,
 		created_at,
 		updated_at
 	`
-	BRAND_CREATE_FIELDS = `
+	kBrandCreateFields = `
 		name,
 		slug
 	`
-	BRAND_UPDATE_FIELDS = `
+	kBrandUpdateFields = `
 		name = ?,
 		slug = ?
 	`
-	BRAND_PLACEHOLDER = `(?, ?)`
+	kBrandPlaceholder = `(?, ?)`
 )
 
 type BrandRepository struct {
@@ -41,8 +41,8 @@ func (r *BrandRepository) FindAll() ([]models.Brand, error) {
 	var brands []models.Brand
 
 	query := `
-		SELECT ` + BRAND_FIND_FIELDS + `
-		FROM ` + BRAND_TABLE_NAME + `
+		SELECT ` + kBrandFindFields + `
+		FROM ` + kBrandTableName + `
 		ORDER BY name ASC
 	`
 
@@ -58,8 +58,8 @@ func (r *BrandRepository) FindByID(id uint64) (*models.Brand, error) {
 	var brand models.Brand
 
 	query := `
-		SELECT ` + BRAND_FIND_FIELDS + `
-		FROM ` + BRAND_TABLE_NAME + `
+		SELECT ` + kBrandFindFields + `
+		FROM ` + kBrandTableName + `
 		WHERE id = ?
 		LIMIT 1
 	`
@@ -77,9 +77,9 @@ func (r *BrandRepository) FindByID(id uint64) (*models.Brand, error) {
 
 func (r *BrandRepository) Create(brand *models.Brand) error {
 	query := `
-		INSERT INTO ` + BRAND_TABLE_NAME + ` 
-		(` + BRAND_CREATE_FIELDS + `)
-		VALUES ` + BRAND_PLACEHOLDER + `
+		INSERT INTO ` + kBrandTableName + ` 
+		(` + kBrandCreateFields + `)
+		VALUES ` + kBrandPlaceholder + `
 	`
 
 	result, err := r.db.Exec(
@@ -101,8 +101,8 @@ func (r *BrandRepository) Create(brand *models.Brand) error {
 	return r.db.Get(
 		brand,
 		`
-		SELECT `+BRAND_FIND_FIELDS+`
-		FROM `+BRAND_TABLE_NAME+`
+		SELECT `+kBrandFindFields+`
+		FROM `+kBrandTableName+`
 		WHERE id = ?
 		`,
 		brand.ID,
@@ -111,8 +111,8 @@ func (r *BrandRepository) Create(brand *models.Brand) error {
 
 func (r *BrandRepository) Update(brand *models.Brand) error {
 	query := `
-		UPDATE ` + BRAND_TABLE_NAME + `
-		SET ` + BRAND_UPDATE_FIELDS + `
+		UPDATE ` + kBrandTableName + `
+		SET ` + kBrandUpdateFields + `
 		WHERE id = ?
 	`
 
@@ -130,8 +130,8 @@ func (r *BrandRepository) Update(brand *models.Brand) error {
 	return r.db.Get(
 		brand,
 		`
-		SELECT `+BRAND_FIND_FIELDS+`
-		FROM `+BRAND_TABLE_NAME+`
+		SELECT `+kBrandFindFields+`
+		FROM `+kBrandTableName+`
 		WHERE id = ?
 		`,
 		brand.ID,
@@ -140,7 +140,7 @@ func (r *BrandRepository) Update(brand *models.Brand) error {
 
 func (r *BrandRepository) Delete(id uint64) error {
 	query := `
-		DELETE FROM ` + BRAND_TABLE_NAME + `
+		DELETE FROM ` + kBrandTableName + `
 		WHERE id = ?
 	`
 

@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	ITEM_TABLE_NAME  = `table_item`
-	ITEM_FIND_FIELDS = `
+	kItemTableName  = `table_item`
+	kItemFindFields = `
 		id,
 		brand_id,
 		category_id,
@@ -23,7 +23,7 @@ const (
 		created_at,
 		updated_at
 	`
-	ITEM_CREATE_FIELDS = `
+	kItemCreateFields = `
 		brand_id,
 		category_id,
 		location_id,
@@ -34,7 +34,7 @@ const (
 		item_status,
 		notes
 	`
-	ITEM_UPDATE_FIELDS = `
+	kItemUpdateFields = `
 		brand_id = ?,
 		category_id = ?,
 		location_id = ?,
@@ -45,7 +45,7 @@ const (
 		item_status = ?,
 		notes = ?
 	`
-	ITEM_PLACEHOLDER = `(?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	kItemPlaceholder = `(?, ?, ?, ?, ?, ?, ?, ?, ?)`
 )
 
 type ItemRepository struct {
@@ -62,8 +62,8 @@ func (r *ItemRepository) FindAll() ([]models.Item, error) {
 	var items []models.Item
 
 	query := `
-		SELECT ` + ITEM_FIND_FIELDS + `
-		FROM ` + ITEM_TABLE_NAME + `
+		SELECT ` + kItemFindFields + `
+		FROM ` + kItemTableName + `
 		ORDER BY name ASC
 	`
 
@@ -79,8 +79,8 @@ func (r *ItemRepository) FindByID(id uint64) (*models.Item, error) {
 	var item models.Item
 
 	query := `
-		SELECT ` + ITEM_FIND_FIELDS + `
-		FROM ` + ITEM_TABLE_NAME + `
+		SELECT ` + kItemFindFields + `
+		FROM ` + kItemTableName + `
 		WHERE id = ?
 		LIMIT 1
 	`
@@ -106,9 +106,9 @@ func (r *ItemRepository) Create(item *models.Item) error {
 // bersamaan dengan insert metadata dinamis di table_<slug>_metadata.
 func (r *ItemRepository) CreateWithExecutor(exec sqlExecutor, item *models.Item) error {
 	query := `
-		INSERT INTO ` + ITEM_TABLE_NAME + ` 
-		(` + ITEM_CREATE_FIELDS + `)
-		VALUES ` + ITEM_PLACEHOLDER + `
+		INSERT INTO ` + kItemTableName + ` 
+		(` + kItemCreateFields + `)
+		VALUES ` + kItemPlaceholder + `
 	`
 
 	result, err := exec.Exec(
@@ -137,8 +137,8 @@ func (r *ItemRepository) CreateWithExecutor(exec sqlExecutor, item *models.Item)
 	return exec.Get(
 		item,
 		`
-		SELECT `+ITEM_FIND_FIELDS+`
-		FROM `+ITEM_TABLE_NAME+`
+		SELECT `+kItemFindFields+`
+		FROM `+kItemTableName+`
 		WHERE id = ?
 		`,
 		item.ID,
@@ -147,8 +147,8 @@ func (r *ItemRepository) CreateWithExecutor(exec sqlExecutor, item *models.Item)
 
 func (r *ItemRepository) Update(item *models.Item) error {
 	query := `
-		UPDATE ` + ITEM_TABLE_NAME + `
-		SET ` + ITEM_UPDATE_FIELDS + `
+		UPDATE ` + kItemTableName + `
+		SET ` + kItemUpdateFields + `
 		WHERE id = ?
 	`
 
@@ -173,8 +173,8 @@ func (r *ItemRepository) Update(item *models.Item) error {
 	return r.db.Get(
 		item,
 		`
-		SELECT `+ITEM_FIND_FIELDS+`
-		FROM `+ITEM_TABLE_NAME+`
+		SELECT `+kItemFindFields+`
+		FROM `+kItemTableName+`
 		WHERE id = ?
 		`,
 		item.ID,
@@ -183,7 +183,7 @@ func (r *ItemRepository) Update(item *models.Item) error {
 
 func (r *ItemRepository) Delete(id uint64) error {
 	query := `
-		DELETE FROM ` + ITEM_TABLE_NAME + `
+		DELETE FROM ` + kItemTableName + `
 		WHERE id = ?
 	`
 

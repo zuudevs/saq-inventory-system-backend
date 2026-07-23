@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	LOCATION_TABLE_NAME  = `table_location`
-	LOCATION_FIND_FIELDS = `
+	kLocationTableName  = `table_location`
+	kLocationFindFields = `
 		id,
 		name,
 		slug,
@@ -18,19 +18,19 @@ const (
 		created_at,
 		updated_at
 	`
-	LOCATION_CREATE_FIELDS = `
+	kLocationCreateFields = `
 		name,
 		slug,
 		room_code,
 		description
 	`
-	LOCATION_UPDATE_FIELDS = `
+	kLocationUpdateFields = `
 		name = ?,
 		slug = ?,
 		room_code = ?,
 		description = ?
 	`
-	LOCATION_PLACEHOLDER = `(?, ?, ?, ?)`
+	kLocationPlaceholder = `(?, ?, ?, ?)`
 )
 
 type LocationRepository struct {
@@ -47,8 +47,8 @@ func (r *LocationRepository) FindAll() ([]models.Location, error) {
 	var locations []models.Location
 
 	query := `
-		SELECT ` + LOCATION_FIND_FIELDS + `
-		FROM ` + LOCATION_TABLE_NAME + `
+		SELECT ` + kLocationFindFields + `
+		FROM ` + kLocationTableName + `
 		ORDER BY name ASC
 	`
 
@@ -64,8 +64,8 @@ func (r *LocationRepository) FindByID(id uint64) (*models.Location, error) {
 	var location models.Location
 
 	query := `
-		SELECT ` + LOCATION_FIND_FIELDS + `
-		FROM ` + LOCATION_TABLE_NAME + `
+		SELECT ` + kLocationFindFields + `
+		FROM ` + kLocationTableName + `
 		WHERE id = ?
 		LIMIT 1
 	`
@@ -83,9 +83,9 @@ func (r *LocationRepository) FindByID(id uint64) (*models.Location, error) {
 
 func (r *LocationRepository) Create(location *models.Location) error {
 	query := `
-		INSERT INTO ` + LOCATION_TABLE_NAME + ` 
-		(` + LOCATION_CREATE_FIELDS + `)
-		VALUES ` + LOCATION_PLACEHOLDER + `
+		INSERT INTO ` + kLocationTableName + ` 
+		(` + kLocationCreateFields + `)
+		VALUES ` + kLocationPlaceholder + `
 	`
 
 	result, err := r.db.Exec(
@@ -113,8 +113,8 @@ func (r *LocationRepository) Create(location *models.Location) error {
 	return r.db.Get(
 		location,
 		`
-		SELECT `+LOCATION_FIND_FIELDS+`
-		FROM `+LOCATION_TABLE_NAME+`
+		SELECT `+kLocationFindFields+`
+		FROM `+kLocationTableName+`
 		WHERE id = ?
 		`,
 		location.ID,
@@ -123,8 +123,8 @@ func (r *LocationRepository) Create(location *models.Location) error {
 
 func (r *LocationRepository) Update(location *models.Location) error {
 	query := `
-		UPDATE ` + LOCATION_TABLE_NAME + `
-		SET ` + LOCATION_UPDATE_FIELDS + `
+		UPDATE ` + kLocationTableName + `
+		SET ` + kLocationUpdateFields + `
 		WHERE id = ?
 	`
 
@@ -144,8 +144,8 @@ func (r *LocationRepository) Update(location *models.Location) error {
 	return r.db.Get(
 		location,
 		`
-		SELECT `+LOCATION_FIND_FIELDS+`
-		FROM `+LOCATION_TABLE_NAME+`
+		SELECT `+kLocationFindFields+`
+		FROM `+kLocationTableName+`
 		WHERE id = ?
 		`,
 		location.ID,
@@ -154,7 +154,7 @@ func (r *LocationRepository) Update(location *models.Location) error {
 
 func (r *LocationRepository) Delete(id uint64) error {
 	query := `
-		DELETE FROM ` + LOCATION_TABLE_NAME + `
+		DELETE FROM ` + kLocationTableName + `
 		WHERE id = ?
 	`
 
