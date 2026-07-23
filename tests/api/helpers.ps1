@@ -92,11 +92,17 @@ function Invoke-Api {
         "-w", "`nHTTP_STATUS:%{http_code}"
     )
 
+    $tempFile = $null
     if ($Body) {
-        $curlArgs += @("-d", $Body)
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        [System.IO.File]::WriteAllText($tempFile, $Body)
+        $curlArgs += @("-d", "@$tempFile")
     }
 
     $raw = & $script:CurlCommand @curlArgs
+    if ($tempFile) {
+        Remove-Item $tempFile -ErrorAction SilentlyContinue
+    }
     $lines = $raw -split "`n"
 
     $statusLine = $lines | Where-Object { $_ -like "HTTP_STATUS:*" }
