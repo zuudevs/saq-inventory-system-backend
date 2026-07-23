@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/zuudevs/saq-inventory-system-backend/internal/dto"
+	"github.com/zuudevs/saq-inventory-system-backend/internal/utils"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/version"
 )
 
@@ -17,10 +17,9 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp: time.Now().UTC(),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-	}
+	utils.JSON(
+		w,
+		http.StatusOK,
+		dto.Success("", response),
+	)
 }
