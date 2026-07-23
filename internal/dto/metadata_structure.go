@@ -10,6 +10,10 @@ type CreateMetadataStructureRequest struct {
 	Fields []models.MetadataField `json:"fields"`
 }
 
+type UpdateMetadataStructureRequest struct {
+	Fields []models.MetadataField `json:"fields,omitempty"`
+}
+
 type MetadataStructureResponse struct {
 	ID         uint64                 `json:"id"`
 	CategoryID uint64                 `json:"category_id"`

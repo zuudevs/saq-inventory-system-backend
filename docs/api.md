@@ -230,6 +230,17 @@ All responses return JSON enclosed in a standard wrapper envelope.
   }
   ```
 
+### Update Metadata Structure
+* **Method**: `PUT`
+* **Path**: `/categories/{categoryId}/metadata-structure`
+* **Payload**: Same format as Create Metadata Structure. This endpoint dynamically alters the underlying table columns (adding, dropping, or modifying fields) without losing data in unchanged fields.
+* **Response**: Updated metadata structure details.
+
+### Delete Metadata Structure
+* **Method**: `DELETE`
+* **Path**: `/categories/{categoryId}/metadata-structure`
+* **Response**: Success envelope.
+
 ---
 
 ## 6. Image Management API

@@ -84,19 +84,19 @@ jobs:
             exit 1
           fi
 
-    #   - name: Wait Until Server Ready
-    #     run: |
-    #       for i in {1..30}; do
-    #         if curl -fs http://localhost:8080/health >/dev/null; then
-    #           echo "Server is ready."
-    #           exit 0
-    #         fi
-    #         sleep 1
-    #       done
+      - name: Wait Until Server Ready
+        run: |
+          for i in {1..30}; do
+            if curl -fs http://localhost:8080/health >/dev/null; then
+              echo "Server is ready."
+              exit 0
+            fi
+            sleep 1
+          done
 
-    #       echo "Server failed to start."
-    #       cat server.log
-    #       exit 1
+          echo "Server failed to start."
+          cat server.log
+          exit 1
 
       - name: Run API Test Script
         shell: pwsh

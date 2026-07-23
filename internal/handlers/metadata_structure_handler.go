@@ -118,3 +118,95 @@ func (h *MetadataStructureHandler) FindByCategoryID(w http.ResponseWriter, r *ht
 		),
 	)
 }
+
+func (h *MetadataStructureHandler) Update(w http.ResponseWriter, r *http.Request) {
+	categoryID, err := strconv.ParseUint(
+		chi.URLParam(r, "categoryId"),
+		10,
+		64,
+	)
+
+	if err != nil {
+		utils.JSON(
+			w,
+			http.StatusBadRequest,
+			dto.Error[any]("invalid category id"),
+		)
+		return
+	}
+
+	var req dto.UpdateMetadataStructureRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.JSON(
+			w,
+			http.StatusBadRequest,
+			dto.Error[any]("invalid request body"),
+		)
+		return
+	}
+
+	structure, err := h.MetadataStructureService.Update(categoryID, req)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err.Error() == "category not found" || err.Error() == "metadata structure not found" {
+			status = http.StatusNotFound
+		}
+
+		utils.JSON(
+			w,
+			status,
+			dto.Error[any](err.Error()),
+		)
+		return
+	}
+
+	utils.JSON(
+		w,
+		http.StatusOK,
+		dto.Success(
+			"metadata structure updated successfully",
+			structure,
+		),
+	)
+}
+
+func (h *MetadataStructureHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	categoryID, err := strconv.ParseUint(
+		chi.URLParam(r, "categoryId"),
+		10,
+		64,
+	)
+
+	if err != nil {
+		utils.JSON(
+			w,
+			http.StatusBadRequest,
+			dto.Error[any]("invalid category id"),
+		)
+		return
+	}
+
+	if err := h.MetadataStructureService.Delete(categoryID); err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "category not found" {
+			status = http.StatusNotFound
+		}
+
+		utils.JSON(
+			w,
+			status,
+			dto.Error[any](err.Error()),
+		)
+		return
+	}
+
+	utils.JSON(
+		w,
+		http.StatusOK,
+		dto.Success[any](
+			"metadata structure deleted successfully",
+			nil,
+		),
+	)
+}

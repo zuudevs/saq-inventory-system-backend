@@ -79,6 +79,65 @@ func (s *MetadataStructureService) Create(
 	return dto.ToMetadataStructureResponse(structure)
 }
 
+func (s *MetadataStructureService) Update(
+	categoryID uint64, 
+	req dto.UpdateMetadataStructureRequest,
+) (*dto.MetadataStructureResponse, error) {
+	category, err := s.CategoryRepository.FindByID(categoryID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if category == nil {
+		return nil, errors.New("category not found")
+	}
+
+	existing, err := s.MetadataStructureRepository.FindByCategoryID(categoryID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existing == nil {
+		return nil, errors.New("metadata structure is not already exists for this category")
+	}
+
+	if err := validateFields(req.Fields); err != nil {
+		return nil, err
+	}
+
+	oldFields, err := existing.DecodeFields()
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode existing metadata fields: %w", err)
+	}
+
+	if err := s.SchemaService.UpdateMetadataTable(category.Slug, oldFields, req.Fields); err != nil {
+		return nil, fmt.Errorf("failed to update metadata table schema: %w", err)
+	}
+
+	fieldsJSON, err := models.EncodeMetadataFields(req.Fields)
+	if err != nil {
+		// Compensating action: revert schema changes
+		_ = s.SchemaService.UpdateMetadataTable(category.Slug, req.Fields, oldFields)
+		return nil, err
+	}
+
+	structure := &models.MetadataStructure{
+		ID:         existing.ID,
+		CategoryID: categoryID,
+		Fields:     fieldsJSON,
+		Version:    existing.Version + 1,
+	}
+
+	if err := s.MetadataStructureRepository.Update(structure); err != nil {
+		// Compensating action: revert schema changes
+		_ = s.SchemaService.UpdateMetadataTable(category.Slug, req.Fields, oldFields)
+		return nil, fmt.Errorf("failed to save metadata structure: %w", err)
+	}
+
+	return dto.ToMetadataStructureResponse(structure)
+}
+
 func (s *MetadataStructureService) FindByCategoryID(categoryID uint64) (*dto.MetadataStructureResponse, error) {
 	structure, err := s.MetadataStructureRepository.FindByCategoryID(categoryID)
 	if err != nil {
@@ -89,6 +148,23 @@ func (s *MetadataStructureService) FindByCategoryID(categoryID uint64) (*dto.Met
 	}
 
 	return dto.ToMetadataStructureResponse(structure)
+}
+
+func (s *MetadataStructureService) Delete(categoryID uint64) error {
+	category, err := s.CategoryRepository.FindByID(categoryID)
+	if err != nil {
+		return err
+	}
+	if category == nil {
+		return errors.New("category not found")
+	}
+
+	// Drop physical table
+	if err := s.SchemaService.DropMetadataTable(category.Slug); err != nil {
+		return fmt.Errorf("failed to drop metadata table: %w", err)
+	}
+
+	return s.MetadataStructureRepository.Delete(categoryID)
 }
 
 // validateFields melakukan validasi request-level (bukan validasi
