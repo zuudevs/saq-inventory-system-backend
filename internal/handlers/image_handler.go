@@ -31,6 +31,15 @@ func NewImageHandler(service *services.ImageService, storagePath string) *ImageH
 // pasang multipart request lagi, dan supaya ganti gambar pada image yang
 // sudah ada bisa upload dulu sebelum PUT.
 func (h *ImageHandler) Upload(w http.ResponseWriter, r *http.Request) {
+	if r.Header == nil {
+		utils.JSON(
+			w,
+			http.StatusBadRequest,
+			dto.Error[any]("missing file header"),
+		)
+		return 
+	}
+
 	if err := r.ParseMultipartForm(utils.MaxImageUploadSize); err != nil {
 		utils.JSON(
 			w,
