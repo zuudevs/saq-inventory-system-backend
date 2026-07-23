@@ -77,5 +77,6 @@ func MetadataStructureRoutes(r chi.Router, h *handlers.MetadataStructureHandler)
 		r.Get("/", h.FindByCategoryID)
 		r.Post("/", h.Create)
 		r.Put("/", h.Update)
+		r.Delete("/", h.Delete)
 	})
 }

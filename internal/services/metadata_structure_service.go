@@ -150,6 +150,23 @@ func (s *MetadataStructureService) FindByCategoryID(categoryID uint64) (*dto.Met
 	return dto.ToMetadataStructureResponse(structure)
 }
 
+func (s *MetadataStructureService) Delete(categoryID uint64) error {
+	category, err := s.CategoryRepository.FindByID(categoryID)
+	if err != nil {
+		return err
+	}
+	if category == nil {
+		return errors.New("category not found")
+	}
+
+	// Drop physical table
+	if err := s.SchemaService.DropMetadataTable(category.Slug); err != nil {
+		return fmt.Errorf("failed to drop metadata table: %w", err)
+	}
+
+	return s.MetadataStructureRepository.Delete(categoryID)
+}
+
 // validateFields melakukan validasi request-level (bukan validasi
 // identifier/DDL — itu tanggung jawab schema.BuildCreateTableSQL). Fokus
 // di sini adalah memastikan payload yang dikirim user lengkap dan masuk
