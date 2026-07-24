@@ -87,3 +87,9 @@ func ExportRoutes(r chi.Router, h *handlers.ExportHandler) {
 		r.Get("/xlsx", h.ExportXLSX)
 	})
 }
+
+func ImportRoutes(r chi.Router, h *handlers.ImportHandler) {
+	r.Route("/imports", func(r chi.Router) {
+		r.Post("/xlsx", h.ImportXLSX)
+	})
+}

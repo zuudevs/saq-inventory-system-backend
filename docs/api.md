@@ -328,3 +328,35 @@ Exports all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Ima
   - `Content-Type`: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
   - `Content-Disposition`: `attachment; filename=exports.xlsx`
 
+---
+
+## 9. Data Import API
+
+### Import All Resources from XLSX
+Imports system resources from an Excel workbook (`.xlsx`) containing sheets for `Brands`, `Categories`, `Locations`, `Items`, and `Images`.
+- **Validation Rules**:
+  1. **Sheet Names**: Workbook must contain exact required sheet names (`Brands`, `Categories`, `Locations`, `Items`, `Images`).
+  2. **Column Headers**: Row 1 of each sheet must match expected column headers (`ID`, `Name`, `Asset Code`, etc.).
+  3. **Data Types**: Row cells are strictly validated for positive integers, non-empty text, valid booleans, and domain constraints.
+- **Transaction**: Performs import within a single database transaction; if any row or constraint fails, the entire import rolls back.
+
+* **Method**: `POST`
+* **Path**: `/imports/xlsx`
+* **Payload**: `multipart/form-data` with field `file`
+* **Success Response**:
+  ```json
+  {
+    "success": true,
+    "message": "import completed successfully",
+    "data": {
+      "brands_imported": 1,
+      "categories_imported": 1,
+      "locations_imported": 1,
+      "items_imported": 1,
+      "images_imported": 1,
+      "total_imported": 5
+    }
+  }
+  ```
+
+
