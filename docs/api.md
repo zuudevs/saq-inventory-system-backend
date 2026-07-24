@@ -313,7 +313,7 @@ Serves uploaded images directly.
 ## 8. Data Export API
 
 ### Export All Resources to CSV (ZIP Archive)
-Exports all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Images`) as separate CSV files (`brands.csv`, `categories.csv`, `locations.csv`, `items.csv`, `images.csv`) bundled into a single ZIP archive.
+Exports all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Images`, and `Metadata Structures`) as separate CSV files (`brands.csv`, `categories.csv`, `locations.csv`, `items.csv`, `images.csv`, `metadata_structures.csv`) bundled into a single ZIP archive.
 * **Method**: `GET`
 * **Path**: `/exports/csv`
 * **Response Headers**:
@@ -321,7 +321,7 @@ Exports all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Ima
   - `Content-Disposition`: `attachment; filename=exports.zip`
 
 ### Export All Resources to XLSX (Excel Workbook)
-Exports all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Images`) into a single Excel workbook containing separate worksheets for each resource.
+Exports all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Images`, and `Metadata Structures`) into a single Excel workbook containing separate worksheets for each resource (`Brands`, `Categories`, `Locations`, `Items`, `Images`, `Metadata Structures`).
 * **Method**: `GET`
 * **Path**: `/exports/xlsx`
 * **Response Headers**:
