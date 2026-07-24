@@ -42,58 +42,91 @@ func (s *ImportService) ImportXLSX(reader io.Reader) (*dto.ImportSummary, error)
 	locIDMap := make(map[uint64]uint64)
 	itemIDMap := make(map[uint64]uint64)
 
-	// 1. Insert Brands
+	// 1. Insert/Upsert Brands
 	for _, b := range data.Brands {
 		oldID := b.ID
-		res, err := tx.Exec("INSERT INTO table_brand (name, slug) VALUES (?, ?)", b.Name, b.Slug)
-		if err != nil {
-			return nil, fmt.Errorf("failed to insert brand %q: %w", b.Name, err)
-		}
-		newID, err := res.LastInsertId()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get brand last insert id: %w", err)
+		var targetID uint64
+		if oldID > 0 {
+			_, err := tx.Exec(`INSERT OR REPLACE INTO table_brand (id, name, slug) VALUES (?, ?, ?)`, oldID, b.Name, b.Slug)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import brand %q: %w", b.Name, err)
+			}
+			targetID = oldID
+		} else {
+			res, err := tx.Exec(`INSERT OR REPLACE INTO table_brand (name, slug) VALUES (?, ?)`, b.Name, b.Slug)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import brand %q: %w", b.Name, err)
+			}
+			newID, _ := res.LastInsertId()
+			if newID > 0 {
+				targetID = uint64(newID)
+			} else {
+				_ = tx.Get(&targetID, "SELECT id FROM table_brand WHERE slug = ?", b.Slug)
+			}
 		}
 		if oldID > 0 {
-			brandIDMap[oldID] = uint64(newID)
+			brandIDMap[oldID] = targetID
 		}
 		summary.BrandsImported++
 	}
 
-	// 2. Insert Categories
+	// 2. Insert/Upsert Categories
 	for _, c := range data.Categories {
 		oldID := c.ID
-		res, err := tx.Exec("INSERT INTO table_category (name, slug, description) VALUES (?, ?, ?)", c.Name, c.Slug, c.Description)
-		if err != nil {
-			return nil, fmt.Errorf("failed to insert category %q: %w", c.Name, err)
-		}
-		newID, err := res.LastInsertId()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get category last insert id: %w", err)
+		var targetID uint64
+		if oldID > 0 {
+			_, err := tx.Exec(`INSERT OR REPLACE INTO table_category (id, name, slug, description) VALUES (?, ?, ?, ?)`, oldID, c.Name, c.Slug, c.Description)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import category %q: %w", c.Name, err)
+			}
+			targetID = oldID
+		} else {
+			res, err := tx.Exec(`INSERT OR REPLACE INTO table_category (name, slug, description) VALUES (?, ?, ?)`, c.Name, c.Slug, c.Description)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import category %q: %w", c.Name, err)
+			}
+			newID, _ := res.LastInsertId()
+			if newID > 0 {
+				targetID = uint64(newID)
+			} else {
+				_ = tx.Get(&targetID, "SELECT id FROM table_category WHERE slug = ?", c.Slug)
+			}
 		}
 		if oldID > 0 {
-			catIDMap[oldID] = uint64(newID)
+			catIDMap[oldID] = targetID
 		}
 		summary.CategoriesImported++
 	}
 
-	// 3. Insert Locations
+	// 3. Insert/Upsert Locations
 	for _, l := range data.Locations {
 		oldID := l.ID
-		res, err := tx.Exec("INSERT INTO table_location (name, slug, room_code, description) VALUES (?, ?, ?, ?)", l.Name, l.Slug, l.RoomCode, l.Description)
-		if err != nil {
-			return nil, fmt.Errorf("failed to insert location %q: %w", l.Name, err)
-		}
-		newID, err := res.LastInsertId()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get location last insert id: %w", err)
+		var targetID uint64
+		if oldID > 0 {
+			_, err := tx.Exec(`INSERT OR REPLACE INTO table_location (id, name, slug, room_code, description) VALUES (?, ?, ?, ?, ?)`, oldID, l.Name, l.Slug, l.RoomCode, l.Description)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import location %q: %w", l.Name, err)
+			}
+			targetID = oldID
+		} else {
+			res, err := tx.Exec(`INSERT OR REPLACE INTO table_location (name, slug, room_code, description) VALUES (?, ?, ?, ?)`, l.Name, l.Slug, l.RoomCode, l.Description)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import location %q: %w", l.Name, err)
+			}
+			newID, _ := res.LastInsertId()
+			if newID > 0 {
+				targetID = uint64(newID)
+			} else {
+				_ = tx.Get(&targetID, "SELECT id FROM table_location WHERE slug = ?", l.Slug)
+			}
 		}
 		if oldID > 0 {
-			locIDMap[oldID] = uint64(newID)
+			locIDMap[oldID] = targetID
 		}
 		summary.LocationsImported++
 	}
 
-	// 4. Insert Items
+	// 4. Insert/Upsert Items
 	for _, item := range data.Items {
 		oldID := item.ID
 
@@ -134,24 +167,38 @@ func (s *ImportService) ImportXLSX(reader io.Reader) (*dto.ImportSummary, error)
 			}
 		}
 
-		res, err := tx.Exec(`
-			INSERT INTO table_item (brand_id, category_id, location_id, asset_code, name, slug, item_condition, item_status, notes)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, brandID, catID, locID, item.AssetCode, item.Name, item.Slug, item.ItemCondition, item.ItemStatus, item.Notes)
-		if err != nil {
-			return nil, fmt.Errorf("failed to insert item %q: %w", item.Name, err)
-		}
-		newID, err := res.LastInsertId()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get item last insert id: %w", err)
+		var targetID uint64
+		if oldID > 0 {
+			_, err := tx.Exec(`
+				INSERT OR REPLACE INTO table_item (id, brand_id, category_id, location_id, asset_code, name, slug, item_condition, item_status, notes)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			`, oldID, brandID, catID, locID, item.AssetCode, item.Name, item.Slug, item.ItemCondition, item.ItemStatus, item.Notes)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import item %q: %w", item.Name, err)
+			}
+			targetID = oldID
+		} else {
+			res, err := tx.Exec(`
+				INSERT OR REPLACE INTO table_item (brand_id, category_id, location_id, asset_code, name, slug, item_condition, item_status, notes)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			`, brandID, catID, locID, item.AssetCode, item.Name, item.Slug, item.ItemCondition, item.ItemStatus, item.Notes)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import item %q: %w", item.Name, err)
+			}
+			newID, _ := res.LastInsertId()
+			if newID > 0 {
+				targetID = uint64(newID)
+			} else {
+				_ = tx.Get(&targetID, "SELECT id FROM table_item WHERE asset_code = ?", item.AssetCode)
+			}
 		}
 		if oldID > 0 {
-			itemIDMap[oldID] = uint64(newID)
+			itemIDMap[oldID] = targetID
 		}
 		summary.ItemsImported++
 	}
 
-	// 5. Insert Images
+	// 5. Insert/Upsert Images
 	for _, img := range data.Images {
 		var locID *uint64
 		if img.LocationID != nil {
@@ -179,12 +226,22 @@ func (s *ImportService) ImportXLSX(reader io.Reader) (*dto.ImportSummary, error)
 			}
 		}
 
-		_, err := tx.Exec(`
-			INSERT INTO table_image (location_id, item_id, image_path, is_primary)
-			VALUES (?, ?, ?, ?)
-		`, locID, itemID, img.ImagePath, img.IsPrimary)
-		if err != nil {
-			return nil, fmt.Errorf("failed to insert image: %w", err)
+		if img.ID > 0 {
+			_, err := tx.Exec(`
+				INSERT OR REPLACE INTO table_image (id, location_id, item_id, image_path, is_primary)
+				VALUES (?, ?, ?, ?, ?)
+			`, img.ID, locID, itemID, img.ImagePath, img.IsPrimary)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import image: %w", err)
+			}
+		} else {
+			_, err := tx.Exec(`
+				INSERT OR REPLACE INTO table_image (location_id, item_id, image_path, is_primary)
+				VALUES (?, ?, ?, ?)
+			`, locID, itemID, img.ImagePath, img.IsPrimary)
+			if err != nil {
+				return nil, fmt.Errorf("failed to import image: %w", err)
+			}
 		}
 		summary.ImagesImported++
 	}

@@ -2,7 +2,9 @@ Write-Host "`n########## IMPORT ##########" -ForegroundColor Magenta
 
 # 1. First download exported XLSX to temp file
 $exportUrl = "$BASE_URL/exports/xlsx"
-$tmpXlsx = [System.IO.Path]::GetTempFileName() + ".xlsx"
+$tempFile = [System.IO.Path]::GetTempFileName()
+$tmpXlsx = "$tempFile.xlsx"
+Remove-Item -Force $tempFile -ErrorAction SilentlyContinue
 
 Write-Host "==> [Export XLSX for Import Test] GET $exportUrl -> $tmpXlsx" -ForegroundColor Cyan
 
