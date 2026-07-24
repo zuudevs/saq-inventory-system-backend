@@ -27,13 +27,13 @@ type UpdateImageRequest struct {
 }
 
 type ImageResponse struct {
-	ID         uint64    `json:"id"`
-	LocationID *uint64   `json:"location_id,omitempty"`
-	ItemID     *uint64   `json:"item_id,omitempty"`
-	ImagePath  string    `json:"image_path"`
-	IsPrimary  bool      `json:"is_primary"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID         uint64    `json:"id" export:"ID"`
+	LocationID *uint64   `json:"location_id,omitempty" export:"Location ID"`
+	ItemID     *uint64   `json:"item_id,omitempty" export:"Item ID"`
+	ImagePath  string    `json:"image_path" export:"Image Path"`
+	IsPrimary  bool      `json:"is_primary" export:"Is Primary"`
+	CreatedAt  time.Time `json:"created_at" export:"Created At"`
+	UpdatedAt  time.Time `json:"updated_at" export:"Updated At"`
 }
 
 // UploadImageResponse adalah balasan dari POST /images/upload — cuma berisi

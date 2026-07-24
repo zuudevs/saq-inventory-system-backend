@@ -20,12 +20,12 @@ type UpdateCategoryRequest struct {
 }
 
 type CategoryResponse struct {
-	ID          uint64    `json:"id"`
-	Name        string    `json:"name"`
+	ID          uint64    `json:"id" export:"ID"`
+	Name        string    `json:"name" export:"Name"`
 	Slug        string    `json:"slug"`
-	Description *string   `json:"description,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Description *string   `json:"description,omitempty" export:"Description"`
+	CreatedAt   time.Time `json:"created_at" export:"Created At"`
+	UpdatedAt   time.Time `json:"updated_at" export:"Updated At"`
 }
 
 func (r CreateCategoryRequest) ToModel() *models.Category {

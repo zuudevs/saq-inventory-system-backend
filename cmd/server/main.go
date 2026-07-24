@@ -98,6 +98,14 @@ func main() {
 		LocationRepository: locationRepository,
 	}
 
+	exportService := &services.ExportService{
+		DB:                 db,
+		BrandRepository:    brandRepository,
+		CategoryRepository: categoryRepository,
+		ItemRepository:     itemRepository,
+		LocationRepository: locationRepository,
+	}
+
 	// Handler
 	brandHandler := handlers.NewBrandHandler(brandService)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
@@ -105,6 +113,7 @@ func main() {
 	itemHandler := handlers.NewItemHandler(itemService)
 	metadataStructureHandler := handlers.NewMetadataStructureHandler(metadataStructureService)
 	imageHandler := handlers.NewImageHandler(imageService, storagePath)
+	exportHandler := handlers.NewExportHandler(exportService)
 
 	// Router
 	r := chi.NewRouter()
@@ -117,6 +126,7 @@ func main() {
 	routes.MetadataStructureRoutes(r, metadataStructureHandler)
 	routes.ImageRoutes(r, imageHandler)
 	routes.StorageRoutes(r, storagePath)
+	routes.ExportRoutes(r, exportHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {

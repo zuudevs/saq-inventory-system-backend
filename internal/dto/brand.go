@@ -17,11 +17,11 @@ type UpdateBrandRequest struct {
 }
 
 type BrandResponse struct {
-	ID        uint64    `json:"id"`
-	Name      string    `json:"name"`
+	ID        uint64    `json:"id" export:"ID"`
+	Name      string    `json:"name" export:"Name"`
 	Slug      string    `json:"slug"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time `json:"created_at" export:"Created At"`
+	UpdatedAt time.Time `json:"updated_at" export:"Updated At"`
 }
 
 func (r CreateBrandRequest) ToModel() *models.Brand {
