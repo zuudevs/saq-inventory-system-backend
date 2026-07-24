@@ -2,7 +2,7 @@
 
 -- +goose StatementBegin
 
-CREATE TRIGGER `trg_table_category_updated_at`
+CREATE TRIGGER IF NOT EXISTS `trg_table_category_updated_at`
 AFTER UPDATE ON `table_category`
 FOR EACH ROW
 WHEN NEW.updated_at = OLD.updated_at
@@ -16,7 +16,7 @@ END;
 
 -- +goose StatementBegin
 
-CREATE TRIGGER `trg_table_brand_updated_at`
+CREATE TRIGGER IF NOT EXISTS `trg_table_brand_updated_at`
 AFTER UPDATE ON `table_brand`
 FOR EACH ROW
 WHEN NEW.updated_at = OLD.updated_at
@@ -30,7 +30,7 @@ END;
 
 -- +goose StatementBegin
 
-CREATE TRIGGER `trg_table_location_updated_at`
+CREATE TRIGGER IF NOT EXISTS `trg_table_location_updated_at`
 AFTER UPDATE ON `table_location`
 FOR EACH ROW
 WHEN NEW.updated_at = OLD.updated_at
@@ -44,7 +44,7 @@ END;
 
 -- +goose StatementBegin
 
-CREATE TRIGGER `trg_table_item_updated_at`
+CREATE TRIGGER IF NOT EXISTS `trg_table_item_updated_at`
 AFTER UPDATE ON `table_item`
 FOR EACH ROW
 WHEN NEW.updated_at = OLD.updated_at
@@ -58,7 +58,7 @@ END;
 
 -- +goose StatementBegin
 
-CREATE TRIGGER `trg_table_image_updated_at`
+CREATE TRIGGER IF NOT EXISTS `trg_table_image_updated_at`
 AFTER UPDATE ON `table_image`
 FOR EACH ROW
 WHEN NEW.updated_at = OLD.updated_at
@@ -72,7 +72,7 @@ END;
 
 -- +goose StatementBegin
 
-CREATE TRIGGER `trg_table_metadata_structure_updated_at`
+CREATE TRIGGER IF NOT EXISTS `trg_table_metadata_structure_updated_at`
 AFTER UPDATE ON `table_metadata_structure`
 FOR EACH ROW
 WHEN NEW.updated_at = OLD.updated_at
