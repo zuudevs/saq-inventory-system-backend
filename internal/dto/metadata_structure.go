@@ -17,7 +17,7 @@ type UpdateMetadataStructureRequest struct {
 type MetadataStructureResponse struct {
 	ID         uint64                 `json:"id" export:"ID"`
 	CategoryID uint64                 `json:"category_id" export:"Category ID"`
-	Fields     []models.MetadataField `json:"fields"`
+	Fields     []models.MetadataField `json:"fields" export:"Fields"`
 	Version    uint                   `json:"version" export:"Version"`
 	CreatedAt  time.Time              `json:"created_at" export:"Created At"`
 	UpdatedAt  time.Time              `json:"updated_at" export:"Updated At"`

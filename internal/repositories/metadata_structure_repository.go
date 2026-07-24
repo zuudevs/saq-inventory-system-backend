@@ -137,3 +137,21 @@ func (r *MetadataStructureRepository) Delete(categoryID uint64) error {
 
 	return err
 }
+
+func (r *MetadataStructureRepository) FindAll() ([]models.MetadataStructure, error) {
+	var structures []models.MetadataStructure
+
+	query := `
+		SELECT ` + kMetadataStructureFindFields + `
+		FROM ` + kMetadataStructureTableName + `
+		ORDER BY id ASC
+	`
+
+	err := r.db.Select(&structures, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return structures, nil
+}
+
