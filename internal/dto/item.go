@@ -40,7 +40,7 @@ type ItemResponse struct {
 	AssetCode     string         `json:"asset_code" export:"Asset Code"`
 	Name          string         `json:"name" export:"Name"`
 	Slug          string         `json:"slug"`
-	ItemCondition string         `json:"item_condition" export:"Item  Condition"`
+	ItemCondition string         `json:"item_condition" export:"Item Condition"`
 	ItemStatus    string         `json:"item_status" export:"Item Status"`
 	Notes         *string        `json:"notes,omitempty" export:"Notes"`
 	Metadata      map[string]any `json:"metadata,omitempty" `

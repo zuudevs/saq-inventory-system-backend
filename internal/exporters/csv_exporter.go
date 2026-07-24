@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"time"
 )
 
 // ExportCSV writes a slice of structs to a writer in CSV format.
@@ -16,11 +17,7 @@ func ExportCSV(writer io.Writer, data interface{}) error {
 		return errors.New("data must be a slice")
 	}
 
-	if val.Len() == 0 {
-		return nil
-	}
-
-	elemType := val.Index(0).Type()
+	elemType := val.Type().Elem()
 	if elemType.Kind() == reflect.Ptr {
 		elemType = elemType.Elem()
 	}
@@ -46,9 +43,17 @@ func ExportCSV(writer io.Writer, data interface{}) error {
 		return err
 	}
 
+	if val.Len() == 0 {
+		csvWriter.Flush()
+		return csvWriter.Error()
+	}
+
 	for i := 0; i < val.Len(); i++ {
 		itemVal := val.Index(i)
 		if itemVal.Kind() == reflect.Ptr {
+			if itemVal.IsNil() {
+				continue
+			}
 			itemVal = itemVal.Elem()
 		}
 
@@ -80,6 +85,12 @@ func formatValue(val reflect.Value) string {
 
 	switch val.Kind() {
 	case reflect.Struct:
+		if t, ok := val.Interface().(time.Time); ok {
+			if t.IsZero() {
+				return ""
+			}
+			return t.Format("2006-01-02 15:04:05")
+		}
 		if t, ok := val.Interface().(interface{ Format(string) string }); ok {
 			return t.Format("2006-01-02 15:04:05")
 		}
