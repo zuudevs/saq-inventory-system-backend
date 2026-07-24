@@ -99,12 +99,13 @@ func main() {
 	}
 
 	exportService := &services.ExportService{
-		DB:                 db,
-		BrandRepository:    brandRepository,
-		CategoryRepository: categoryRepository,
-		ItemRepository:     itemRepository,
-		LocationRepository: locationRepository,
-		ImageRepository:    imageRepository,
+		DB:                          db,
+		BrandRepository:             brandRepository,
+		CategoryRepository:          categoryRepository,
+		ItemRepository:              itemRepository,
+		LocationRepository:          locationRepository,
+		ImageRepository:             imageRepository,
+		MetadataStructureRepository: metadataStructureRepository,
 	}
 
 	importService := &services.ImportService{

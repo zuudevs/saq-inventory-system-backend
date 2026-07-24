@@ -11,12 +11,13 @@ import (
 )
 
 type ExportService struct {
-	DB                 *sqlx.DB
-	BrandRepository    *repositories.BrandRepository
-	CategoryRepository *repositories.CategoryRepository
-	ItemRepository     *repositories.ItemRepository
-	LocationRepository *repositories.LocationRepository
-	ImageRepository    *repositories.ImageRepository
+	DB                          *sqlx.DB
+	BrandRepository             *repositories.BrandRepository
+	CategoryRepository          *repositories.CategoryRepository
+	ItemRepository              *repositories.ItemRepository
+	LocationRepository          *repositories.LocationRepository
+	ImageRepository             *repositories.ImageRepository
+	MetadataStructureRepository *repositories.MetadataStructureRepository
 }
 
 // ExportCSV fetches all exportable resources and exports them in CSV format bundled into a ZIP archive.
@@ -50,6 +51,9 @@ func (s *ExportService) ExportCSV(writer io.Writer) error {
 	if err := exportResource("images.csv", func() (interface{}, error) { return s.getImageResponses() }); err != nil {
 		return err
 	}
+	if err := exportResource("metadata_structures.csv", func() (interface{}, error) { return s.getMetadataStructureResponses() }); err != nil {
+		return err
+	}
 
 	return zipWriter.Close()
 }
@@ -76,6 +80,10 @@ func (s *ExportService) ExportXLSX(writer io.Writer) error {
 	if err != nil {
 		return err
 	}
+	metadataStructures, err := s.getMetadataStructureResponses()
+	if err != nil {
+		return err
+	}
 
 	sheets := []exporters.SheetData{
 		{Name: "Brands", Data: brands},
@@ -83,6 +91,7 @@ func (s *ExportService) ExportXLSX(writer io.Writer) error {
 		{Name: "Locations", Data: locations},
 		{Name: "Items", Data: items},
 		{Name: "Images", Data: images},
+		{Name: "Metadata Structures", Data: metadataStructures},
 	}
 
 	return exporters.ExportMultiSheetXLSX(writer, sheets)
@@ -159,6 +168,25 @@ func (s *ExportService) getImageResponses() ([]dto.ImageResponse, error) {
 	responses := make([]dto.ImageResponse, len(images))
 	for i := range images {
 		responses[i] = *dto.ToImageResponse(&images[i])
+	}
+	return responses, nil
+}
+
+func (s *ExportService) getMetadataStructureResponses() ([]dto.MetadataStructureResponse, error) {
+	if s.MetadataStructureRepository == nil {
+		return []dto.MetadataStructureResponse{}, nil
+	}
+	structures, err := s.MetadataStructureRepository.FindAll()
+	if err != nil {
+		return nil, err
+	}
+	responses := make([]dto.MetadataStructureResponse, len(structures))
+	for i := range structures {
+		res, err := dto.ToMetadataStructureResponse(&structures[i])
+		if err != nil {
+			return nil, err
+		}
+		responses[i] = *res
 	}
 	return responses, nil
 }

@@ -68,11 +68,12 @@ func TestExportCSV(t *testing.T) {
 	}
 
 	expectedFiles := map[string]bool{
-		"brands.csv":     false,
-		"categories.csv": false,
-		"locations.csv":  false,
-		"items.csv":      false,
-		"images.csv":     false,
+		"brands.csv":              false,
+		"categories.csv":          false,
+		"locations.csv":           false,
+		"items.csv":               false,
+		"images.csv":              false,
+		"metadata_structures.csv": false,
 	}
 
 	for _, f := range zipReader.File {
@@ -121,7 +122,7 @@ func TestExportXLSX(t *testing.T) {
 	defer f.Close()
 
 	sheets := f.GetSheetList()
-	expectedSheets := []string{"Brands", "Categories", "Locations", "Items", "Images"}
+	expectedSheets := []string{"Brands", "Categories", "Locations", "Items", "Images", "Metadata Structures"}
 	for _, expected := range expectedSheets {
 		found := false
 		for _, s := range sheets {

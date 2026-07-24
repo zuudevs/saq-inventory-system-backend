@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [Unreleased]
+## [v1.1.1-sqlite]
+
+### Added
+* Export of category metadata structures (`metadata_structures.csv` in ZIP archive and `"Metadata Structures"` multi-sheet worksheet in XLSX workbook).
+
+---
+
+## [v1.1.0-sqlite]
 
 ### Added
 * XLSX Import endpoint `POST /imports/xlsx` for importing system data from Excel workbooks.
@@ -25,6 +32,15 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 * Category validation check bug (`category == nil`) in `MetadataStructureService.Update`.
 * Fixed database update bug where `structure.ID` was not mapped prior to updating metadata structures.
+
+---
+
+## [v1.0.0-sqlite-beta]
+
+### Added
+* LICENSE and README files with project details and setup instructions.
+* Health check endpoint `GET /health`.
+* WebP image conversion support and updated image upload handling.
 
 ---
 
