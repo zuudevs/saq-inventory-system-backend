@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+* XLSX Import endpoint `POST /imports/xlsx` for importing system data from Excel workbooks.
+* Strict XLSX validation engine checking required sheet names (`Brands`, `Categories`, `Locations`, `Items`, `Images`), column headers (Row 1), and data cell types across all resources.
+* Atomic database transaction support for import execution, rolling back upon any validation or constraint error.
 * Export endpoints `/exports/csv` and `/exports/xlsx` for downloading all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Images`).
 * ZIP archive bundling (`archive/zip`) for CSV exports, generating individual CSV files per resource (`brands.csv`, `categories.csv`, etc.).
 * Multi-sheet Excel workbook export (`ExportMultiSheetXLSX`) generating distinct worksheets for each resource.

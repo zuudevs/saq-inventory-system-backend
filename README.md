@@ -8,6 +8,7 @@
 - Image upload and management with static file serving
 - Dynamic metadata structure for categories
 - Full-system data export to CSV (ZIP archive) and XLSX (multi-sheet workbook)
+- XLSX data import with strict sheet name, column header, and data type validation
 - SQLite database integration with foreign key support
 - Automated API testing
 - Docker support
