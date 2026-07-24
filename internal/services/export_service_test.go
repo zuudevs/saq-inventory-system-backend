@@ -1,7 +1,10 @@
 package services
 
 import (
+	"archive/zip"
 	"bytes"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/xuri/excelize/v2"
@@ -47,16 +50,68 @@ func setupServiceTestDB(t *testing.T) *repositories.ItemRepository {
 	return repositories.NewItemRepository(db)
 }
 
-func TestExportItemsToXLSX(t *testing.T) {
+func TestExportCSV(t *testing.T) {
 	itemRepo := setupServiceTestDB(t)
 	exportService := &ExportService{
 		ItemRepository: itemRepo,
 	}
 
 	var buf bytes.Buffer
-	err := exportService.ExportItemsToXLSX(&buf)
+	err := exportService.ExportCSV(&buf)
 	if err != nil {
-		t.Fatalf("ExportItemsToXLSX failed: %v", err)
+		t.Fatalf("ExportCSV failed: %v", err)
+	}
+
+	zipReader, err := zip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+	if err != nil {
+		t.Fatalf("Failed to open zip archive: %v", err)
+	}
+
+	expectedFiles := map[string]bool{
+		"brands.csv":     false,
+		"categories.csv": false,
+		"locations.csv":  false,
+		"items.csv":      false,
+		"images.csv":     false,
+	}
+
+	for _, f := range zipReader.File {
+		if _, exists := expectedFiles[f.Name]; exists {
+			expectedFiles[f.Name] = true
+		}
+		if f.Name == "items.csv" {
+			rc, err := f.Open()
+			if err != nil {
+				t.Fatalf("Failed to open items.csv in zip: %v", err)
+			}
+			content, err := io.ReadAll(rc)
+			rc.Close()
+			if err != nil {
+				t.Fatalf("Failed to read items.csv from zip: %v", err)
+			}
+			if !strings.Contains(string(content), "LAP-001") {
+				t.Errorf("Expected items.csv to contain 'LAP-001', got %s", string(content))
+			}
+		}
+	}
+
+	for fileName, found := range expectedFiles {
+		if !found {
+			t.Errorf("Expected zip to contain file %s", fileName)
+		}
+	}
+}
+
+func TestExportXLSX(t *testing.T) {
+	itemRepo := setupServiceTestDB(t)
+	exportService := &ExportService{
+		ItemRepository: itemRepo,
+	}
+
+	var buf bytes.Buffer
+	err := exportService.ExportXLSX(&buf)
+	if err != nil {
+		t.Fatalf("ExportXLSX failed: %v", err)
 	}
 
 	f, err := excelize.OpenReader(&buf)
@@ -65,9 +120,24 @@ func TestExportItemsToXLSX(t *testing.T) {
 	}
 	defer f.Close()
 
-	rows, err := f.GetRows("Sheet1")
+	sheets := f.GetSheetList()
+	expectedSheets := []string{"Brands", "Categories", "Locations", "Items", "Images"}
+	for _, expected := range expectedSheets {
+		found := false
+		for _, s := range sheets {
+			if s == expected {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Expected sheet %s in workbook, sheets found: %v", expected, sheets)
+		}
+	}
+
+	rows, err := f.GetRows("Items")
 	if err != nil {
-		t.Fatalf("Failed to read rows from Sheet1: %v", err)
+		t.Fatalf("Failed to read rows from Items sheet: %v", err)
 	}
 
 	if len(rows) < 2 {
@@ -78,3 +148,4 @@ func TestExportItemsToXLSX(t *testing.T) {
 		t.Errorf("Expected asset code 'LAP-001' at row 2 col 5, got %q", rows[1][4])
 	}
 }
+

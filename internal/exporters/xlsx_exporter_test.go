@@ -148,3 +148,44 @@ func TestExportXLSX_InvalidInput(t *testing.T) {
 		t.Errorf("Expected 'data must be a slice of structs' error, got %v", err)
 	}
 }
+
+func TestExportMultiSheetXLSX(t *testing.T) {
+	sheets := []SheetData{
+		{
+			Name: "Brands",
+			Data: []DummyStruct{{ID: 1, Name: "Brand One"}},
+		},
+		{
+			Name: "Items",
+			Data: []DummyStruct{{ID: 2, Name: "Item Two"}},
+		},
+	}
+
+	var buf bytes.Buffer
+	err := ExportMultiSheetXLSX(&buf, sheets)
+	if err != nil {
+		t.Fatalf("ExportMultiSheetXLSX failed: %v", err)
+	}
+
+	f, err := excelize.OpenReader(&buf)
+	if err != nil {
+		t.Fatalf("Failed to parse output as excel file: %v", err)
+	}
+	defer f.Close()
+
+	sheetList := f.GetSheetList()
+	if len(sheetList) != 2 || sheetList[0] != "Brands" || sheetList[1] != "Items" {
+		t.Errorf("Unexpected sheet list: %v", sheetList)
+	}
+
+	rowsBrands, err := f.GetRows("Brands")
+	if err != nil || len(rowsBrands) != 2 || rowsBrands[1][1] != "Brand One" {
+		t.Errorf("Unexpected rows in Brands sheet: %v, err: %v", rowsBrands, err)
+	}
+
+	rowsItems, err := f.GetRows("Items")
+	if err != nil || len(rowsItems) != 2 || rowsItems[1][1] != "Item Two" {
+		t.Errorf("Unexpected rows in Items sheet: %v, err: %v", rowsItems, err)
+	}
+}
+

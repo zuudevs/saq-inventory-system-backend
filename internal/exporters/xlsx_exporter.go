@@ -8,9 +8,51 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// ExportXLSX writes a slice of structs to a writer in XLSX format.
-// It uses reflection to inspect the "export" tags on the struct fields.
+type SheetData struct {
+	Name string
+	Data interface{}
+}
+
+// ExportMultiSheetXLSX writes multiple datasets into separate worksheets of a single XLSX workbook.
+func ExportMultiSheetXLSX(writer io.Writer, sheets []SheetData) error {
+	f := excelize.NewFile()
+	defer func() {
+		_ = f.Close()
+	}()
+
+	defaultSheet := "Sheet1"
+
+	for idx, sheetData := range sheets {
+		sheetName := sheetData.Name
+		if sheetName == "" {
+			sheetName = "Sheet"
+		}
+
+		if idx == 0 {
+			if err := f.SetSheetName(defaultSheet, sheetName); err != nil {
+				return err
+			}
+		} else {
+			if _, err := f.NewSheet(sheetName); err != nil {
+				return err
+			}
+		}
+
+		if err := writeSheetData(f, sheetName, sheetData.Data); err != nil {
+			return err
+		}
+	}
+
+	_, err := f.WriteTo(writer)
+	return err
+}
+
+// ExportXLSX writes a single slice of structs to a writer in XLSX format on Sheet1.
 func ExportXLSX(writer io.Writer, data interface{}) error {
+	return ExportMultiSheetXLSX(writer, []SheetData{{Name: "Sheet1", Data: data}})
+}
+
+func writeSheetData(f *excelize.File, sheet string, data interface{}) error {
 	val := reflect.ValueOf(data)
 	if val.Kind() != reflect.Slice {
 		return errors.New("data must be a slice")
@@ -36,13 +78,6 @@ func ExportXLSX(writer io.Writer, data interface{}) error {
 			fieldIndices = append(fieldIndices, i)
 		}
 	}
-
-	f := excelize.NewFile()
-	defer func() {
-		_ = f.Close()
-	}()
-
-	sheet := "Sheet1"
 
 	// Write headers
 	for colIdx, header := range headers {
@@ -79,6 +114,6 @@ func ExportXLSX(writer io.Writer, data interface{}) error {
 		}
 	}
 
-	_, err := f.WriteTo(writer)
-	return err
+	return nil
 }
+

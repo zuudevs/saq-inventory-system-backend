@@ -104,6 +104,7 @@ func main() {
 		CategoryRepository: categoryRepository,
 		ItemRepository:     itemRepository,
 		LocationRepository: locationRepository,
+		ImageRepository:    imageRepository,
 	}
 
 	// Handler
