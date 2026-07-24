@@ -15,12 +15,12 @@ type UpdateMetadataStructureRequest struct {
 }
 
 type MetadataStructureResponse struct {
-	ID         uint64                 `json:"id"`
-	CategoryID uint64                 `json:"category_id"`
+	ID         uint64                 `json:"id" export:"ID"`
+	CategoryID uint64                 `json:"category_id" export:"Category ID"`
 	Fields     []models.MetadataField `json:"fields"`
-	Version    uint                   `json:"version"`
-	CreatedAt  time.Time              `json:"created_at"`
-	UpdatedAt  time.Time              `json:"updated_at"`
+	Version    uint                   `json:"version" export:"Version"`
+	CreatedAt  time.Time              `json:"created_at" export:"Created At"`
+	UpdatedAt  time.Time              `json:"updated_at" export:"Updated At"`
 }
 
 func ToMetadataStructureResponse(structure *models.MetadataStructure) (*MetadataStructureResponse, error) {

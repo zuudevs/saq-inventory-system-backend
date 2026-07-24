@@ -80,3 +80,9 @@ func MetadataStructureRoutes(r chi.Router, h *handlers.MetadataStructureHandler)
 		r.Delete("/", h.Delete)
 	})
 }
+
+func ExportRoutes(r chi.Router, h *handlers.ExportHandler) {
+	r.Route("/exports", func(r chi.Router) {
+		r.Get("/items", h.ExportItems)
+	})
+}

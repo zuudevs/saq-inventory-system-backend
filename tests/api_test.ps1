@@ -55,6 +55,7 @@ $suffix = Get-Date -Format "yyyyMMddHHmmss"
 . (Join-Path $PSScriptRoot "api/category_tests.ps1")
 . (Join-Path $PSScriptRoot "api/metadata_structure_tests.ps1")
 . (Join-Path $PSScriptRoot "api/item_tests.ps1")
+. (Join-Path $PSScriptRoot "api/export_tests.ps1")
 . (Join-Path $PSScriptRoot "api/image_tests.ps1")
 . (Join-Path $PSScriptRoot "api/cleanup_tests.ps1")
 
