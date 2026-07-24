@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/xuri/excelize/v2"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/config"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/repositories"
 	"github.com/zuudevs/saq-inventory-system-backend/internal/services"
@@ -86,5 +87,50 @@ func TestExportItemsHandler(t *testing.T) {
 	expectedData := "1,1,2,3,LAP-001,MacBook Pro M3,good,active,Test laptop notes"
 	if !strings.Contains(body, expectedData) {
 		t.Errorf("Expected body to contain row data %q, got %q", expectedData, body)
+	}
+}
+
+func TestExportItemsXLSXHandler(t *testing.T) {
+	itemRepo := setupExportTestDB(t)
+
+	exportService := &services.ExportService{
+		ItemRepository: itemRepo,
+	}
+	handler := NewExportHandler(exportService)
+
+	req := httptest.NewRequest(http.MethodGet, "/exports/items/xlsx", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ExportItemsXLSX(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("Expected status 200 OK, got %d", rr.Code)
+	}
+
+	contentType := rr.Header().Get("Content-Type")
+	expectedContentType := "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	if contentType != expectedContentType {
+		t.Errorf("Expected Content-Type %q, got %q", expectedContentType, contentType)
+	}
+
+	contentDisp := rr.Header().Get("Content-Disposition")
+	expectedDisp := "attachment; filename=items.xlsx"
+	if contentDisp != expectedDisp {
+		t.Errorf("Expected Content-Disposition %q, got %q", expectedDisp, contentDisp)
+	}
+
+	f, err := excelize.OpenReader(rr.Body)
+	if err != nil {
+		t.Fatalf("Failed to parse XLSX body: %v", err)
+	}
+	defer f.Close()
+
+	rows, err := f.GetRows("Sheet1")
+	if err != nil {
+		t.Fatalf("Failed to read rows from Sheet1: %v", err)
+	}
+
+	if len(rows) < 2 {
+		t.Fatalf("Expected at least 2 rows (1 header + 1 data), got %d", len(rows))
 	}
 }
