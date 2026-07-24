@@ -16,21 +16,21 @@ func NewExportHandler(service *services.ExportService) *ExportHandler {
 	}
 }
 
-func (h *ExportHandler) ExportItems(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", "attachment; filename=items.csv")
+func (h *ExportHandler) ExportCSV(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", "attachment; filename=exports.zip")
 
-	if err := h.ExportService.ExportItemsToCSV(w); err != nil {
+	if err := h.ExportService.ExportCSV(w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-func (h *ExportHandler) ExportItemsXLSX(w http.ResponseWriter, r *http.Request) {
+func (h *ExportHandler) ExportXLSX(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	w.Header().Set("Content-Disposition", "attachment; filename=items.xlsx")
+	w.Header().Set("Content-Disposition", "attachment; filename=exports.xlsx")
 
-	if err := h.ExportService.ExportItemsToXLSX(w); err != nil {
+	if err := h.ExportService.ExportXLSX(w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

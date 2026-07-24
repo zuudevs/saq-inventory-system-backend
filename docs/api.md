@@ -307,3 +307,24 @@ Removes the database image record and deletes the physical file from the disk.
 Serves uploaded images directly.
 * **Method**: `GET`
 * **Path**: `/storage/*` (e.g. `/storage/images/4e9089f2-2b63-47a2-9b2f-5f07df52084c.png`)
+
+---
+
+## 8. Data Export API
+
+### Export All Resources to CSV (ZIP Archive)
+Exports all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Images`) as separate CSV files (`brands.csv`, `categories.csv`, `locations.csv`, `items.csv`, `images.csv`) bundled into a single ZIP archive.
+* **Method**: `GET`
+* **Path**: `/exports/csv`
+* **Response Headers**:
+  - `Content-Type`: `application/zip`
+  - `Content-Disposition`: `attachment; filename=exports.zip`
+
+### Export All Resources to XLSX (Excel Workbook)
+Exports all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Images`) into a single Excel workbook containing separate worksheets for each resource.
+* **Method**: `GET`
+* **Path**: `/exports/xlsx`
+* **Response Headers**:
+  - `Content-Type`: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+  - `Content-Disposition`: `attachment; filename=exports.xlsx`
+

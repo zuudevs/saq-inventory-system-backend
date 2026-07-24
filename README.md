@@ -7,6 +7,7 @@
 - CRUD operations for Brands, Categories, Locations, and Items
 - Image upload and management with static file serving
 - Dynamic metadata structure for categories
+- Full-system data export to CSV (ZIP archive) and XLSX (multi-sheet workbook)
 - SQLite database integration with foreign key support
 - Automated API testing
 - Docker support

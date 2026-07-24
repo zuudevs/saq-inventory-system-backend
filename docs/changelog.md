@@ -7,10 +7,17 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+* Export endpoints `/exports/csv` and `/exports/xlsx` for downloading all system resources (`Brands`, `Categories`, `Locations`, `Items`, `Images`).
+* ZIP archive bundling (`archive/zip`) for CSV exports, generating individual CSV files per resource (`brands.csv`, `categories.csv`, etc.).
+* Multi-sheet Excel workbook export (`ExportMultiSheetXLSX`) generating distinct worksheets for each resource.
 * Dynamic schema alter support using `ALTER TABLE` (`ADD COLUMN` and `DROP COLUMN`) when updating a category's metadata structure, preventing data loss in unchanged columns.
 * HTTP endpoint `PUT /categories/{categoryId}/metadata-structure` to update metadata structures dynamically.
 * HTTP endpoint `DELETE /categories/{categoryId}/metadata-structure` to safely delete metadata structures and drop their physical SQLite tables.
 * Restructured integration test suite into modular scripts under `tests/api/` and updated `tests/api_test.ps1`.
+
+### Changed
+* Refactored export endpoints from `/exports/items/*` to `/exports/csv` and `/exports/xlsx`.
+* Expanded export scope from item-only resources to all system resources.
 
 ### Fixed
 * Category validation check bug (`category == nil`) in `MetadataStructureService.Update`.

@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"archive/zip"
+	"bytes"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -50,7 +53,7 @@ func setupExportTestDB(t *testing.T) *repositories.ItemRepository {
 	return repositories.NewItemRepository(db)
 }
 
-func TestExportItemsHandler(t *testing.T) {
+func TestExportCSVHandler(t *testing.T) {
 	itemRepo := setupExportTestDB(t)
 
 	exportService := &services.ExportService{
@@ -58,39 +61,67 @@ func TestExportItemsHandler(t *testing.T) {
 	}
 	handler := NewExportHandler(exportService)
 
-	req := httptest.NewRequest(http.MethodGet, "/exports/items", nil)
+	req := httptest.NewRequest(http.MethodGet, "/exports/csv", nil)
 	rr := httptest.NewRecorder()
 
-	handler.ExportItems(rr, req)
+	handler.ExportCSV(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("Expected status 200 OK, got %d", rr.Code)
 	}
 
 	contentType := rr.Header().Get("Content-Type")
-	if contentType != "text/csv" {
-		t.Errorf("Expected Content-Type 'text/csv', got %q", contentType)
+	if contentType != "application/zip" {
+		t.Errorf("Expected Content-Type 'application/zip', got %q", contentType)
 	}
 
 	contentDisp := rr.Header().Get("Content-Disposition")
-	expectedDisp := "attachment; filename=items.csv"
+	expectedDisp := "attachment; filename=exports.zip"
 	if contentDisp != expectedDisp {
 		t.Errorf("Expected Content-Disposition %q, got %q", expectedDisp, contentDisp)
 	}
 
-	body := rr.Body.String()
-	expectedHeader := "Brand ID,ID,Category ID,Location ID,Asset Code,Name,Item Condition,Item Status,Notes,Created At,Updated At"
-	if !strings.Contains(body, expectedHeader) {
-		t.Errorf("Expected body to contain header %q, got %q", expectedHeader, body)
+	zipReader, err := zip.NewReader(bytes.NewReader(rr.Body.Bytes()), int64(rr.Body.Len()))
+	if err != nil {
+		t.Fatalf("Failed to parse response body as ZIP archive: %v", err)
 	}
 
-	expectedData := "1,1,2,3,LAP-001,MacBook Pro M3,good,active,Test laptop notes"
-	if !strings.Contains(body, expectedData) {
-		t.Errorf("Expected body to contain row data %q, got %q", expectedData, body)
+	expectedFiles := map[string]bool{
+		"brands.csv":     false,
+		"categories.csv": false,
+		"locations.csv":  false,
+		"items.csv":      false,
+		"images.csv":     false,
+	}
+
+	for _, f := range zipReader.File {
+		if _, exists := expectedFiles[f.Name]; exists {
+			expectedFiles[f.Name] = true
+		}
+		if f.Name == "items.csv" {
+			rc, err := f.Open()
+			if err != nil {
+				t.Fatalf("Failed to open items.csv inside zip: %v", err)
+			}
+			content, err := io.ReadAll(rc)
+			rc.Close()
+			if err != nil {
+				t.Fatalf("Failed to read items.csv: %v", err)
+			}
+			if !strings.Contains(string(content), "LAP-001") {
+				t.Errorf("Expected items.csv to contain 'LAP-001', got %s", string(content))
+			}
+		}
+	}
+
+	for fileName, found := range expectedFiles {
+		if !found {
+			t.Errorf("Expected zip archive to contain file %s", fileName)
+		}
 	}
 }
 
-func TestExportItemsXLSXHandler(t *testing.T) {
+func TestExportXLSXHandler(t *testing.T) {
 	itemRepo := setupExportTestDB(t)
 
 	exportService := &services.ExportService{
@@ -98,10 +129,10 @@ func TestExportItemsXLSXHandler(t *testing.T) {
 	}
 	handler := NewExportHandler(exportService)
 
-	req := httptest.NewRequest(http.MethodGet, "/exports/items/xlsx", nil)
+	req := httptest.NewRequest(http.MethodGet, "/exports/xlsx", nil)
 	rr := httptest.NewRecorder()
 
-	handler.ExportItemsXLSX(rr, req)
+	handler.ExportXLSX(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Errorf("Expected status 200 OK, got %d", rr.Code)
@@ -114,7 +145,7 @@ func TestExportItemsXLSXHandler(t *testing.T) {
 	}
 
 	contentDisp := rr.Header().Get("Content-Disposition")
-	expectedDisp := "attachment; filename=items.xlsx"
+	expectedDisp := "attachment; filename=exports.xlsx"
 	if contentDisp != expectedDisp {
 		t.Errorf("Expected Content-Disposition %q, got %q", expectedDisp, contentDisp)
 	}
@@ -125,12 +156,13 @@ func TestExportItemsXLSXHandler(t *testing.T) {
 	}
 	defer f.Close()
 
-	rows, err := f.GetRows("Sheet1")
+	rows, err := f.GetRows("Items")
 	if err != nil {
-		t.Fatalf("Failed to read rows from Sheet1: %v", err)
+		t.Fatalf("Failed to read rows from Items sheet: %v", err)
 	}
 
 	if len(rows) < 2 {
 		t.Fatalf("Expected at least 2 rows (1 header + 1 data), got %d", len(rows))
 	}
 }
+

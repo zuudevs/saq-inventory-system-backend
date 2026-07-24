@@ -83,8 +83,7 @@ func MetadataStructureRoutes(r chi.Router, h *handlers.MetadataStructureHandler)
 
 func ExportRoutes(r chi.Router, h *handlers.ExportHandler) {
 	r.Route("/exports", func(r chi.Router) {
-		r.Get("/items", h.ExportItems)
-		r.Get("/items/xlsx", h.ExportItemsXLSX)
-		r.Get("/items.xlsx", h.ExportItemsXLSX)
+		r.Get("/csv", h.ExportCSV)
+		r.Get("/xlsx", h.ExportXLSX)
 	})
 }
