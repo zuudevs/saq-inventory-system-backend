@@ -40,6 +40,8 @@ if (-not (Test-Path $tmpXlsx)) {
         Write-Host "HTTP Status: 200 OK" -ForegroundColor Yellow
         $script:PassCount++
     } else {
+        Write-Host "Response Output:" -ForegroundColor Red
+        Write-Host $rawImport -ForegroundColor Red
         $script:FailCount++
         $script:Failures += "[Import XLSX] HTTP status bukan 200: $statusLineImport"
     }

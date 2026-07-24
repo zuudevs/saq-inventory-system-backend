@@ -47,13 +47,19 @@ func (s *ImportService) ImportXLSX(reader io.Reader) (*dto.ImportSummary, error)
 		oldID := b.ID
 		var targetID uint64
 		if oldID > 0 {
-			_, err := tx.Exec(`INSERT OR REPLACE INTO table_brand (id, name, slug) VALUES (?, ?, ?)`, oldID, b.Name, b.Slug)
+			_, err := tx.Exec(`
+				INSERT INTO table_brand (id, name, slug) VALUES (?, ?, ?)
+				ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name, slug=EXCLUDED.slug
+			`, oldID, b.Name, b.Slug)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import brand %q: %w", b.Name, err)
 			}
 			targetID = oldID
 		} else {
-			res, err := tx.Exec(`INSERT OR REPLACE INTO table_brand (name, slug) VALUES (?, ?)`, b.Name, b.Slug)
+			res, err := tx.Exec(`
+				INSERT INTO table_brand (name, slug) VALUES (?, ?)
+				ON CONFLICT(slug) DO UPDATE SET name=EXCLUDED.name
+			`, b.Name, b.Slug)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import brand %q: %w", b.Name, err)
 			}
@@ -75,13 +81,19 @@ func (s *ImportService) ImportXLSX(reader io.Reader) (*dto.ImportSummary, error)
 		oldID := c.ID
 		var targetID uint64
 		if oldID > 0 {
-			_, err := tx.Exec(`INSERT OR REPLACE INTO table_category (id, name, slug, description) VALUES (?, ?, ?, ?)`, oldID, c.Name, c.Slug, c.Description)
+			_, err := tx.Exec(`
+				INSERT INTO table_category (id, name, slug, description) VALUES (?, ?, ?, ?)
+				ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name, slug=EXCLUDED.slug, description=EXCLUDED.description
+			`, oldID, c.Name, c.Slug, c.Description)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import category %q: %w", c.Name, err)
 			}
 			targetID = oldID
 		} else {
-			res, err := tx.Exec(`INSERT OR REPLACE INTO table_category (name, slug, description) VALUES (?, ?, ?)`, c.Name, c.Slug, c.Description)
+			res, err := tx.Exec(`
+				INSERT INTO table_category (name, slug, description) VALUES (?, ?, ?)
+				ON CONFLICT(slug) DO UPDATE SET name=EXCLUDED.name, description=EXCLUDED.description
+			`, c.Name, c.Slug, c.Description)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import category %q: %w", c.Name, err)
 			}
@@ -103,13 +115,19 @@ func (s *ImportService) ImportXLSX(reader io.Reader) (*dto.ImportSummary, error)
 		oldID := l.ID
 		var targetID uint64
 		if oldID > 0 {
-			_, err := tx.Exec(`INSERT OR REPLACE INTO table_location (id, name, slug, room_code, description) VALUES (?, ?, ?, ?, ?)`, oldID, l.Name, l.Slug, l.RoomCode, l.Description)
+			_, err := tx.Exec(`
+				INSERT INTO table_location (id, name, slug, room_code, description) VALUES (?, ?, ?, ?, ?)
+				ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name, slug=EXCLUDED.slug, room_code=EXCLUDED.room_code, description=EXCLUDED.description
+			`, oldID, l.Name, l.Slug, l.RoomCode, l.Description)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import location %q: %w", l.Name, err)
 			}
 			targetID = oldID
 		} else {
-			res, err := tx.Exec(`INSERT OR REPLACE INTO table_location (name, slug, room_code, description) VALUES (?, ?, ?, ?)`, l.Name, l.Slug, l.RoomCode, l.Description)
+			res, err := tx.Exec(`
+				INSERT INTO table_location (name, slug, room_code, description) VALUES (?, ?, ?, ?)
+				ON CONFLICT(slug) DO UPDATE SET name=EXCLUDED.name, room_code=EXCLUDED.room_code, description=EXCLUDED.description
+			`, l.Name, l.Slug, l.RoomCode, l.Description)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import location %q: %w", l.Name, err)
 			}
@@ -170,8 +188,9 @@ func (s *ImportService) ImportXLSX(reader io.Reader) (*dto.ImportSummary, error)
 		var targetID uint64
 		if oldID > 0 {
 			_, err := tx.Exec(`
-				INSERT OR REPLACE INTO table_item (id, brand_id, category_id, location_id, asset_code, name, slug, item_condition, item_status, notes)
+				INSERT INTO table_item (id, brand_id, category_id, location_id, asset_code, name, slug, item_condition, item_status, notes)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				ON CONFLICT(id) DO UPDATE SET brand_id=EXCLUDED.brand_id, category_id=EXCLUDED.category_id, location_id=EXCLUDED.location_id, asset_code=EXCLUDED.asset_code, name=EXCLUDED.name, slug=EXCLUDED.slug, item_condition=EXCLUDED.item_condition, item_status=EXCLUDED.item_status, notes=EXCLUDED.notes
 			`, oldID, brandID, catID, locID, item.AssetCode, item.Name, item.Slug, item.ItemCondition, item.ItemStatus, item.Notes)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import item %q: %w", item.Name, err)
@@ -179,8 +198,9 @@ func (s *ImportService) ImportXLSX(reader io.Reader) (*dto.ImportSummary, error)
 			targetID = oldID
 		} else {
 			res, err := tx.Exec(`
-				INSERT OR REPLACE INTO table_item (brand_id, category_id, location_id, asset_code, name, slug, item_condition, item_status, notes)
+				INSERT INTO table_item (brand_id, category_id, location_id, asset_code, name, slug, item_condition, item_status, notes)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+				ON CONFLICT(asset_code) DO UPDATE SET brand_id=EXCLUDED.brand_id, category_id=EXCLUDED.category_id, location_id=EXCLUDED.location_id, name=EXCLUDED.name, slug=EXCLUDED.slug, item_condition=EXCLUDED.item_condition, item_status=EXCLUDED.item_status, notes=EXCLUDED.notes
 			`, brandID, catID, locID, item.AssetCode, item.Name, item.Slug, item.ItemCondition, item.ItemStatus, item.Notes)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import item %q: %w", item.Name, err)
@@ -228,15 +248,16 @@ func (s *ImportService) ImportXLSX(reader io.Reader) (*dto.ImportSummary, error)
 
 		if img.ID > 0 {
 			_, err := tx.Exec(`
-				INSERT OR REPLACE INTO table_image (id, location_id, item_id, image_path, is_primary)
+				INSERT INTO table_image (id, location_id, item_id, image_path, is_primary)
 				VALUES (?, ?, ?, ?, ?)
+				ON CONFLICT(id) DO UPDATE SET location_id=EXCLUDED.location_id, item_id=EXCLUDED.item_id, image_path=EXCLUDED.image_path, is_primary=EXCLUDED.is_primary
 			`, img.ID, locID, itemID, img.ImagePath, img.IsPrimary)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import image: %w", err)
 			}
 		} else {
 			_, err := tx.Exec(`
-				INSERT OR REPLACE INTO table_image (location_id, item_id, image_path, is_primary)
+				INSERT INTO table_image (location_id, item_id, image_path, is_primary)
 				VALUES (?, ?, ?, ?)
 			`, locID, itemID, img.ImagePath, img.IsPrimary)
 			if err != nil {
