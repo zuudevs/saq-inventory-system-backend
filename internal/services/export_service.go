@@ -31,3 +31,18 @@ func (s *ExportService) ExportItemsToCSV(writer io.Writer) error {
 
 	return exporters.ExportCSV(writer, itemResponses)
 }
+
+// ExportItemsToXLSX fetches all items and exports them in XLSX format to the given writer.
+func (s *ExportService) ExportItemsToXLSX(writer io.Writer) error {
+	items, err := s.ItemRepository.FindAll()
+	if err != nil {
+		return err
+	}
+
+	itemResponses := make([]dto.ItemResponse, len(items))
+	for i := range items {
+		itemResponses[i] = *dto.ToItemResponse(&items[i])
+	}
+
+	return exporters.ExportXLSX(writer, itemResponses)
+}

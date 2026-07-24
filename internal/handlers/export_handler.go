@@ -25,3 +25,13 @@ func (h *ExportHandler) ExportItems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *ExportHandler) ExportItemsXLSX(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	w.Header().Set("Content-Disposition", "attachment; filename=items.xlsx")
+
+	if err := h.ExportService.ExportItemsToXLSX(w); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
